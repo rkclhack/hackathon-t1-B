@@ -49,7 +49,7 @@ if (chatContent.value.trim() === "") return;
     chatContent.value
   );
 
-  const formatted = `[${memo.getFormattedTime()}] ${memo.sendBy}さんのメモ：「${memo.content}」`;
+  const formatted = `[${memo.getFormattedTime()}] ${memo.sendBy}さんのメモ：${memo.content}`;
 
   // memoList.unshift(formatted);      // メモ専用リストに追加
   chatList.unshift(formatted);      // 表示中チャットにも追加（任意）
@@ -62,7 +62,14 @@ if (chatContent.value.trim() === "") return;
 // #region socket event handler
 // サーバから受信した入室メッセージ画面上に表示する
 const onReceiveEnter = (data) => {
-  chatList.push(`${data.userName}さんが入室しました`);
+  const message = new ChatMessage(
+    0,                    // messageType: 0 = 入室
+    data.userName,
+    new Date(),           // 現在時刻
+    "入室しました"
+  )
+  const formatted = `[${message.getFormattedTime()}] ${message.sendBy}さんが${message.content}`;
+  chatList.push(formatted);
 }
 
 // サーバから受信した退室メッセージを受け取り画面上に表示する
