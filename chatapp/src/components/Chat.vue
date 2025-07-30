@@ -1,5 +1,5 @@
 <script setup>
-import { inject, ref, reactive, onMounted } from "vue"
+import { inject, ref, reactive, onMounted, computed } from "vue"
 import socketManager from '../socketManager.js'
 import { ChatMessage } from '../objects/message.js'
 
@@ -15,6 +15,7 @@ const socket = socketManager.getInstance()
 // #region reactive variable
 const chatContent = ref("")
 const chatList = reactive([])
+const sortOrder = ref('newest');
 // #endregion
 const memoList = reactive([])
 
@@ -23,6 +24,20 @@ onMounted(() => {
   registerSocketEvent()
 })
 // #endregion
+
+//投稿をソートするプロパティ
+const sortedChatList = computed(() => {
+  // chatList のコピーを作成してソート（元の配列を変更しないため）
+  const listCopy = [...chatList];
+
+  if (sortOrder.value === 'newest') {
+    // 新しい順: sendAt が新しいものほどリストの上に来るように降順でソート
+    return listCopy.sort((a, b) => b.sendAt.getTime() - a.sendAt.getTime());
+  } else {
+    // 古い順: sendAt が古いものほどリストの上に来るように昇順でソート
+    return listCopy.sort((a, b) => a.sendAt.getTime() - b.sendAt.getTime());
+  }
+});
 
 // #region browser event handler
 // 投稿メッセージをサーバに送信する
@@ -61,6 +76,15 @@ if (chatContent.value.trim() === "") return;
   // 入力欄を初期化
 
 }
+
+// ★★★ ソート順を切り替えるメソッドの追加 ★★★
+const sortByNewest = () => {
+  sortOrder.value = 'newest';
+};
+
+const sortByOldest = () => {
+  sortOrder.value = 'oldest';
+};
 // #endregion
 
 // #region socket event handler
@@ -127,6 +151,24 @@ const registerSocketEvent = () => {
       <div class="mt-5">
         <button class="button-normal">投稿</button>
         <button @click="onMemo" class="button-normal util-ml-8px">メモ</button>
+      </div>
+      <div class="mt-5">
+        <v-btn
+            @click="sortByNewest"
+            :color="sortOrder === 'newest' ? 'primary' : ''"
+            :variant="sortOrder === 'newest' ? 'flat' : 'outlined'"
+            class="custom-sort-btn"
+            small >
+            新しい順
+          </v-btn>
+          <v-btn
+            @click="sortByOldest"
+            :color="sortOrder === 'oldest' ? 'primary' : ''"
+            :variant="sortOrder === 'oldest' ? 'flat' : 'outlined'"
+            class="custom-sort-btn"
+            small >
+            古い順
+          </v-btn>
       </div>
       <div class="mt-5" v-if="chatList.length !== 0">
         <ul>
