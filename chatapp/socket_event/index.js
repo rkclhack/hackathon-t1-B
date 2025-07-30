@@ -13,4 +13,15 @@ export default (io, socket) => {
   socket.on("publishEvent", (data) => {
     io.sockets.emit("publishEvent", data)
   })
+
+  // DBの初期化
+  socket.on("initDB", async (data) =>  {
+    try {
+      console.log('Initializing database...');
+      const { UserModel } = await import("../src/db/models/userModel.js");
+      await UserModel.createTable();
+    } catch (error) {
+      console.error('Database initialization failed:', error);
+    }
+  })
 }
