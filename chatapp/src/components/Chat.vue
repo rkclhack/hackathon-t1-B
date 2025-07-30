@@ -1,6 +1,8 @@
 <script setup>
 import { inject, ref, reactive, onMounted } from "vue"
 import socketManager from '../socketManager.js'
+import { ChatMessage } from '../objects/message.js'
+
 
 // #region global state
 const userName = inject("userName")
@@ -14,6 +16,7 @@ const socket = socketManager.getInstance()
 const chatContent = ref("")
 const chatList = reactive([])
 // #endregion
+const memoList = reactive([])
 
 // #region lifecycle
 onMounted(() => {
@@ -37,7 +40,20 @@ const onExit = () => {
 // メモを画面上に表示する
 const onMemo = () => {
   // メモの内容を表示
+if (chatContent.value.trim() === "") return;
 
+  const memo = new ChatMessage(
+    3,                    // messageType: 3 = メモ
+    userName,
+    new Date(),
+    chatContent.value
+  );
+
+  const formatted = `[${memo.getFormattedTime()}] ${memo.sendBy}さんのメモ：「${memo.content}」`;
+
+  // memoList.unshift(formatted);      // メモ専用リストに追加
+  chatList.unshift(formatted);      // 表示中チャットにも追加（任意）
+  chatContent.value = "";
   // 入力欄を初期化
 
 }
@@ -86,10 +102,10 @@ const registerSocketEvent = () => {
     <h1 class="text-h3 font-weight-medium">Vue.js Chat チャットルーム</h1>
     <div class="mt-10">
       <p>ログインユーザ：{{ userName }}さん</p>
-      <textarea variant="outlined" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
+      <textarea v-model="chatContent" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
       <div class="mt-5">
         <button class="button-normal">投稿</button>
-        <button class="button-normal util-ml-8px">メモ</button>
+        <button @click="onMemo" class="button-normal util-ml-8px">メモ</button>
       </div>
       <div class="mt-5" v-if="chatList.length !== 0">
         <ul>
