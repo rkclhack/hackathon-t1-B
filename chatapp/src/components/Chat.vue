@@ -1,13 +1,16 @@
 <script setup>
 import { inject, ref, reactive, onMounted } from "vue"
 import socketManager from '../socketManager.js'
+import { ChatMessage } from "../objects/message.js"
 
 // #region global state
 const userName = inject("userName")
 // #endregion
 
+
 // #region local variable
 const socket = socketManager.getInstance()
+let clientSocketId = null;
 // #endregion
 
 // #region reactive variable
@@ -17,6 +20,14 @@ const chatList = reactive([])
 
 // #region lifecycle
 onMounted(() => {
+  socket.on('connect', () => {
+  clientSocketId = socket.id; // 接続時に自分のsocket.idを取得して保持
+  console.log('Connected with socket ID:', clientSocketId);
+
+  // 接続確立後に入室イベントをサーバーに送信
+  // 自分のuserNameとsocket.idを含めて送信
+  socket.emit("enterEvent", { userName: userName.value, socketId: clientSocketId });
+  });
   registerSocketEvent()
 })
 // #endregion
@@ -31,7 +42,14 @@ const onPublish = () => {
 
 // 退室メッセージをサーバに送信する
 const onExit = () => {
-
+  const exitData = {
+    userName: userName.value,
+    socketId: clientSocketId // 自分のsocket.idを含めて送信
+  };
+  // サーバーに退室イベントを送信
+  socket.emit("exitEvent", exitData);
+  // ソケット接続を切断
+  socket.disconnect();
 }
 
 // メモを画面上に表示する
@@ -70,7 +88,19 @@ const registerSocketEvent = () => {
 
   // 退室イベントを受け取ったら実行
   socket.on("exitEvent", (data) => {
+    console.log('Received exitEvent:', data);
+    // ChatMessage クラスのインスタンスとして退室メッセージを作成します。
+    // ChatMessage(messageType, sendBy, sendAt, content) の形式です。
+    const exitMessage = new ChatMessage(
+      1, // 仮のMessageType.EXIT_NOTIFICATION (1) - メッセージの種類を示します
+      data.userName, // 退室したユーザーの名前
+      new Date(),    // メッセージが生成された現在時刻
+      `${data.userName}さんが退室しました。` // 実際に表示されるメッセージ本文
+    );
 
+      // 作成した退室メッセージを chatList 配列に追加します。
+      // chatList は template で v-for ループされており、これに追加すると画面に表示されます。
+      chatList.push(exitMessage.content);
   })
 
   // 投稿イベントを受け取ったら実行
