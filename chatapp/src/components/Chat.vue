@@ -44,7 +44,7 @@ if (chatContent.value.trim() === "") return;
 
   const memo = new ChatMessage(
     3,                    // messageType: 3 = メモ
-    userName,
+    userName.value,
     new Date(),
     chatContent.value
   );
