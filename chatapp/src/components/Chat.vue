@@ -70,7 +70,7 @@ if (chatContent.value.trim() === "") return;
   const formatted = `[${memo.getFormattedTime()}] ${memo.sendBy}さんのメモ：${memo.content}`;
 
   // memoList.unshift(formatted);      // メモ専用リストに追加
-  chatList.unshift(formatted);      // 表示中チャットにも追加（任意）
+  chatList.unshift(memo);      // 表示中チャットにも追加（任意）
   chatContent.value = "";
   // 入力欄を初期化
 
@@ -80,14 +80,15 @@ if (chatContent.value.trim() === "") return;
 // #region socket event handler
 // サーバから受信した入室メッセージ画面上に表示する
 const onReceiveEnter = (data) => {
+
+  const time = new Date()// 現在時刻
   const message = new ChatMessage(
     0,                    // messageType: 0 = 入室
     data.userName,
-    new Date(),           // 現在時刻
-    "入室しました"
+    time,           
+    `${data.userName}さんが入室しました`
   )
-  const formatted = `[${message.getFormattedTime()}] ${message.sendBy}さんが${message.content}`;
-  chatList.push(formatted);
+  chatList.unshift(message);
 }
 
 // サーバから受信した退室メッセージを受け取り画面上に表示する
@@ -121,12 +122,12 @@ const registerSocketEvent = () => {
 
       // 作成した退室メッセージを chatList 配列に追加します。
       // chatList は template で v-for ループされており、これに追加すると画面に表示されます。
-      chatList.push(exitMessage.content);
+      chatList.unshift(exitMessage);
   })
 
   // 投稿イベントを受け取ったら実行
   socket.on("publishEvent", (data) => {
-    chatList.push(data)
+    chatList.unshift(data)
   })
 }
 // #endregion
@@ -144,7 +145,14 @@ const registerSocketEvent = () => {
       </div>
       <div class="mt-5" v-if="chatList.length !== 0">
         <ul>
-          <li class="item mt-4" v-for="(chat, i) in chatList" :key="i">{{ chat.sendBy }}{{ chat.content }}</li>
+          <li class="item mt-4" v-for="(chat, i) in chatList" :key="i">
+              <div v-if="chat.messageType === 0 || chat.messageType === 1">
+                {{ chat.content }}      {{ chat.sendAt }}
+              </div>
+              <div v-else>
+                {{ chat.sendBy }}{{ chat.content }}     {{ chat.sendAt }}
+              </div>            
+          </li>
         </ul>
       </div>
     </div>
