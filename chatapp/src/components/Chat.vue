@@ -31,6 +31,11 @@ onMounted(() => {
 const onPublish = () => {
   // 入力欄のメッセージを取得
   const postMessage = chatContent.value
+  // 空の場合エラー
+  if(postMessage.trim() === ""){
+      alert("文字列を入力してください。")
+      return
+  }
   // 入力欄を初期化
   chatContent.value = ""
 
@@ -86,7 +91,7 @@ const onReceiveEnter = (data) => {
     0,                    // messageType: 0 = 入室
     data.userName,
     time,           
-    `${data.userName}さんが入室しました`
+    `${data.userName}さんが入室しました。`
   )
   chatList.unshift(message);
 }
