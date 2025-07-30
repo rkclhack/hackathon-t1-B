@@ -1,7 +1,7 @@
 export default (io, socket) => {
   // 入室メッセージをクライアントに送信する
   socket.on("enterEvent", (data) => {
-    socket.broadcast.emit("enterEvent", data)
+    io.sockets.emit("enterEvent", data)
   })
 
   // 退室メッセージをクライアントに送信する
