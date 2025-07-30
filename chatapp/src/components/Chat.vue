@@ -4,6 +4,7 @@ import socketManager from '../socketManager.js'
 import { ChatMessage } from '../objects/message.js'
 
 
+
 // #region global state
 const userName = inject("userName")
 // #endregion
@@ -41,9 +42,22 @@ const sortedChatList = computed(() => {
 
 // #region browser event handler
 // 投稿メッセージをサーバに送信する
+// 投稿ボタンを押したときの処理
 const onPublish = () => {
-
+  // 入力欄のメッセージを取得
+  const postMessage = chatContent.value
   // 入力欄を初期化
+  chatContent.value = ""
+
+  // 投稿内容(ChatMessageオブジェクト)生成
+  const data = new ChatMessage(
+      2,
+      userName.value,
+     "2025",   // ISO 文字列でもOK
+      postMessage
+  );
+  socket.emit("publishEvent", data)
+  //chatList.push(msg)
 
 }
 
@@ -71,7 +85,7 @@ if (chatContent.value.trim() === "") return;
   const formatted = `[${memo.getFormattedTime()}] ${memo.sendBy}さんのメモ：${memo.content}`;
 
   // memoList.unshift(formatted);      // メモ専用リストに追加
-  chatList.unshift(formatted);      // 表示中チャットにも追加（任意）
+  chatList.unshift(memo);      // 表示中チャットにも追加（任意）
   chatContent.value = "";
   // 入力欄を初期化
 
@@ -90,14 +104,15 @@ const sortByOldest = () => {
 // #region socket event handler
 // サーバから受信した入室メッセージ画面上に表示する
 const onReceiveEnter = (data) => {
+
+  const time = new Date()// 現在時刻
   const message = new ChatMessage(
     0,                    // messageType: 0 = 入室
     data.userName,
-    new Date(),           // 現在時刻
-    "入室しました"
+    time,           
+    `${data.userName}さんが入室しました`
   )
-  const formatted = `[${message.getFormattedTime()}] ${message.sendBy}さんが${message.content}`;
-  chatList.push(formatted);
+  chatList.unshift(message);
 }
 
 // サーバから受信した退室メッセージを受け取り画面上に表示する
@@ -131,12 +146,12 @@ const registerSocketEvent = () => {
 
       // 作成した退室メッセージを chatList 配列に追加します。
       // chatList は template で v-for ループされており、これに追加すると画面に表示されます。
-      chatList.push(exitMessage.content);
+      chatList.unshift(exitMessage);
   })
 
   // 投稿イベントを受け取ったら実行
   socket.on("publishEvent", (data) => {
-
+    chatList.unshift(data)
   })
 }
 // #endregion
@@ -147,9 +162,9 @@ const registerSocketEvent = () => {
     <h1 class="text-h3 font-weight-medium">Vue.js Chat チャットルーム</h1>
     <div class="mt-10">
       <p>ログインユーザ：{{ userName }}さん</p>
-      <textarea v-model="chatContent" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
+      <textarea v-model="chatContent" variant="outlined" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
       <div class="mt-5">
-        <button class="button-normal">投稿</button>
+        <button class="button-normal" @click="onPublish">投稿</button>
         <button @click="onMemo" class="button-normal util-ml-8px">メモ</button>
       </div>
       <div class="mt-5">
@@ -172,7 +187,14 @@ const registerSocketEvent = () => {
       </div>
       <div class="mt-5" v-if="chatList.length !== 0">
         <ul>
-          <li class="item mt-4" v-for="(chat, i) in chatList" :key="i">{{ chat }}</li>
+          <li class="item mt-4" v-for="(chat, i) in chatList" :key="i">
+              <div v-if="chat.messageType === 0 || chat.messageType === 1">
+                {{ chat.content }}      {{ chat.sendAt }}
+              </div>
+              <div v-else>
+                {{ chat.sendBy }}{{ chat.content }}     {{ chat.sendAt }}
+              </div>            
+          </li>
         </ul>
       </div>
     </div>
