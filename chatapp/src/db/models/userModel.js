@@ -32,7 +32,7 @@ export class UserModel {
       const hashedPassword = sha256(password);
       const result = await db.run(
         'INSERT INTO users (email, hashed_password, userName, instrument, music, grade, university) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [email, hashedPassword, userName, instrument, music, grade, university]
+        [email, hashedPassword, userName, JSON.stringify(instrument), JSON.stringify(music), grade, university]
       );
       return result.lastID;
     } catch (error) {
@@ -50,6 +50,8 @@ export class UserModel {
         'SELECT userName, instrument, music, grade, university FROM users WHERE id = ?',
         [userId]
       );
+      row.instrument = JSON.parse(row.instrument);
+      row.music = JSON.parse(row.music);
       return row ? row : null;
     } catch (error) {
       console.error('Error fetching user info by ID:', error);

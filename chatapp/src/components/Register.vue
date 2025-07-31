@@ -63,23 +63,16 @@ const onRegister = () => {
     userName: inputUserName.value,
     email: inputEmail.value,
     password: inputPassword.value,
-    instruments: inputInstruments.value,
-    favoriteMusic: inputFavoriteMusic.value,
+    instrument: inputInstruments.value,
+    music: inputFavoriteMusic.value,
     university: inputUniversity.value,
     grade: inputGrade.value
   }
 
-  console.log("登録データ:", registrationData)  // ← ここで全体を出力
-
-
-
+  console.log("instruments:", Array.from(inputFavoriteMusic.value))
 
   // 登録イベント送信
-  socket.emit("registerUser", {
-    userName: inputUserName.value,
-    email: inputEmail.value,
-    password: inputPassword.value
-  })
+  socket.emit("registerUser", registrationData)
 }
 </script>
 
