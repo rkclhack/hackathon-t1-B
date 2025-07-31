@@ -13,6 +13,8 @@ export class UserModel {
           username TEXT NOT NULL,
           instrument JSON,
           music JSON,
+          grade INTEGER,
+          university TEXT,
           last_login_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
@@ -24,13 +26,13 @@ export class UserModel {
     }
   }
 
-  static async createUser(email, password, username, instrument, music) {
+  static async createUser(email, password, username, instrument, music, grade, university) {
     const db = await createConnection();
     try {
       const hashedPassword = sha256(password);
       const result = await db.run(
-        'INSERT INTO users (email, hashed_password, username, instrument, music) VALUES (?, ?, ?, ?, ?)',
-        [email, hashedPassword, username, instrument, music]
+        'INSERT INTO users (email, hashed_password, username, instrument, music, grade, university) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [email, hashedPassword, username, instrument, music, grade, university]
       );
       return result.lastID;
     } catch (error) {
@@ -51,6 +53,23 @@ export class UserModel {
       return row ? row.username : null;
     } catch (error) {
       console.error('Error fetching username by ID:', error);
+      throw error;
+    } finally {
+      await db.close();
+    }
+  }
+
+  static async authenticateUser(email, password) {
+    const db = await createConnection();
+    try {
+      const hashedPassword = sha256(password);
+      const row = await db.get(
+        'SELECT id, username FROM users WHERE email = ? AND hashed_password = ?',
+        [email, hashedPassword]
+      );
+      return row ? { id: row.id, username: row.username } : null;
+    } catch (error) {
+      console.error('Error authenticating user:', error);
       throw error;
     } finally {
       await db.close();
