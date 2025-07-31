@@ -8,7 +8,7 @@ export class UserModel {
       await db.exec(`
         CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          email TEXT NOT NULL,
+          email TEXT NOT NULL UNIQUE,
           hashed_password TEXT NOT NULL,
           userName TEXT NOT NULL,
           instrument JSON,
@@ -83,6 +83,21 @@ export class UserModel {
       return rows;
     } catch (error) {
       console.error('Error fetching all users:', error);
+      throw error;
+    } finally {
+      await db.close();
+    }
+  }
+
+  static async updateLastLogin(userId) {
+    const db = await createConnection();
+    try {
+      await db.run(
+        'UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [userId]
+      );
+    } catch (error) {
+      console.error('Error updating last login:', error);
       throw error;
     } finally {
       await db.close();
