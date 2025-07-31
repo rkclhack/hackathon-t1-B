@@ -261,7 +261,7 @@ const registerSocketEvent = () => {
               </div>
               <div class="normal-message-main"  :class="{ 'blue-border': chat.messageType === 3}">
                 <div class="normal-message-main-content">
-                  <p>{{ chat.content }} </p>
+                  <p class="message-content-text">{{ chat.content }} </p>
 
                 </div>
                 <div class="normal-message-main-time">
@@ -411,6 +411,11 @@ const registerSocketEvent = () => {
 
 .normal-message-main-content {
   margin: 8px;
+}
+
+.message-content-text {
+  white-space: pre-wrap; 
+  word-break: break-word;
 }
 
 .normal-message-main-time {
