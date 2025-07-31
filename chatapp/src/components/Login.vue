@@ -44,9 +44,9 @@ onMounted(() => {
   })
 })
 
-// ユーザー登録処理
 const onRegister = () => {
-  router.push({ name: "register" }) // 登録画面へ遷移
+  // 登録画面へ移動
+  router.push({ name: "register" })
 }
 // #endregion
 </script>
