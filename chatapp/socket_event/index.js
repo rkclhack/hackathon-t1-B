@@ -42,6 +42,11 @@ export default (io, socket) => {
     try {
       const { UserModel } = await import("../src/db/models/userModel.js");
       const user = await UserModel.authenticateUser(data.email, data.password);
+      if (!user) {
+        socket.emit("loginResponse", { result: false, error: 'Invalid email or password' });
+        return;
+      }
+      await UserModel.updateLastLogin(user.id);
       socket.emit("loginResponse", { result: true, userName: user.userName, userId: user.id });
     } catch (error) {
       console.error('Error authenticating user:', error);

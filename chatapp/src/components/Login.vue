@@ -1,5 +1,5 @@
 <script setup>
-import { inject, ref, onMounted } from "vue"
+import { inject, ref, onMounted, onUnmounted } from "vue"
 import { useRouter } from "vue-router"
 import socketManager from '../socketManager.js'
 
@@ -32,18 +32,25 @@ const onEnter = () => {
 
 
 // ログイン後の処理
+const handleLoginResponse = (data) => {
+  if (data.result) {
+    userName.value = data.userName
+    userId.value = data.userId // ユーザーIDを設定
+    socket.emit("enterEvent", { userName: data.userName, userId: data.userId }) // 入室イベント送信
+    router.push({ name: "chat" }) // チャット画面へ遷移
+  } else {
+    alert("ログインに失敗しました: " + data.message)
+  }
+}
+
 onMounted(() => {
   // サーバーからのログイン成功イベントを受信
-  socket.on("loginResponse", (data) => {
-    if (data.result) {
-      userName.value = data.userName
-      userId.value = data.userId // ユーザーIDを設定
-      socket.emit("enterEvent", { userName: data.userName, userId: data.userId }) // 入室イベント送信
-      router.push({ name: "chat" }) // チャット画面へ遷移
-    } else {
-      alert("ログインに失敗しました: " + data.message)
-    }
-  })
+  socket.on("loginResponse", handleLoginResponse)
+})
+
+onUnmounted(() => {
+  // コンポーネントが破棄される時にイベントリスナーを削除
+  socket.off("loginResponse", handleLoginResponse)
 })
 
 const onRegister = () => {
@@ -55,7 +62,7 @@ const onRegister = () => {
 
 <template>
   <div class="mx-auto my-5 px-4">
-    <h1 class="page-title">CircleJam ログイン</h1>
+    <h1 class="page-title">関東軽音インカレサークルチャットルーム ログイン</h1>
 
     <div class="form-group">
       <p>メールアドレス</p>
