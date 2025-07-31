@@ -29,11 +29,11 @@ export default (io, socket) => {
   socket.on("getUserInfo", async (data) => {
     try {
       const { UserModel } = await import("../src/db/models/userModel.js");
-      const userInfo = await UserModel.getUsernameByID(data.userID);
-      socket.emit("userInfoResponse", { userID: data.userID, username: userInfo });
+      const userInfo = await UserModel.getUsernameByID(data.userId);
+      socket.emit("userInfoResponse", { userId: data.userId, userName: userInfo });
     } catch (error) {
       console.error('Error fetching user info:', error);
-      socket.emit("userInfoResponse", { userID: data.userID, error: 'Failed to fetch user info' });
+      socket.emit("userInfoResponse", { userId: data.userId, error: 'Failed to fetch user info' });
     }
   })
 
@@ -42,7 +42,7 @@ export default (io, socket) => {
     try {
       const { UserModel } = await import("../src/db/models/userModel.js");
       const user = await UserModel.authenticateUser(data.email, data.password);
-      socket.emit("loginResponse", { result: true, username: user.username, userID: user.id });
+      socket.emit("loginResponse", { result: true, userName: user.userName, userId: user.id });
     } catch (error) {
       console.error('Error authenticating user:', error);
       socket.emit("loginResponse", { result: false, error: 'Failed to authenticate user' });
@@ -53,10 +53,10 @@ export default (io, socket) => {
   socket.on("registerUser", async (data) => {
     try {
       const { UserModel } = await import("../src/db/models/userModel.js");
-      const userID = await UserModel.createUser(
+      const userId = await UserModel.createUser(
         data.email,
         data.password,
-        data.username,
+        data.userName,
         data.instrument,
         data.music,
         data.grade,

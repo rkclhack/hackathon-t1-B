@@ -14,19 +14,19 @@ const socket = socketManager.getInstance()
 // #endregion
 
 // #region reactive variable
-const inputUserName = ref("")
+const inputEmail = ref("")
 const inputPassword = ref("") // パスワード用
 // #endregion
 
 // #region browser event handler
 // 入室処理
 const onEnter = () => {
-  if (inputUserName.value.trim() === "" || inputPassword.value.trim() === "") {
-    alert("ユーザー名とパスワードを入力してください")
+  if (inputEmail.value.trim() === "" || inputPassword.value.trim() === "") {
+    alert("メールアドレスとパスワードを入力してください")
     return
   }
   // 入室イベント送信
-  socket.emit("login", { userName: inputUserName.value })
+  socket.emit("login", { email: inputEmail.value, password: inputPassword.value })
   // router.push({ name: "chat" })
 }
 
@@ -58,8 +58,8 @@ const onRegister = () => {
     <h1 class="page-title">CircleJam ログイン</h1>
 
     <div class="form-group">
-      <p>ユーザー名</p>
-      <input type="text" class="user-name-text" v-model="inputUserName" />
+      <p>メールアドレス</p>
+      <input type="email" class="user-name-text" v-model="inputEmail" />
     </div>
 
     <div class="form-group">

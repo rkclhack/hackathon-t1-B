@@ -10,7 +10,7 @@ export class UserModel {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           email TEXT NOT NULL,
           hashed_password TEXT NOT NULL,
-          username TEXT NOT NULL,
+          userName TEXT NOT NULL,
           instrument JSON,
           music JSON,
           grade INTEGER,
@@ -26,13 +26,13 @@ export class UserModel {
     }
   }
 
-  static async createUser(email, password, username, instrument, music, grade, university) {
+  static async createUser(email, password, userName, instrument, music, grade, university) {
     const db = await createConnection();
     try {
       const hashedPassword = sha256(password);
       const result = await db.run(
-        'INSERT INTO users (email, hashed_password, username, instrument, music, grade, university) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [email, hashedPassword, username, instrument, music, grade, university]
+        'INSERT INTO users (email, hashed_password, userName, instrument, music, grade, university) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [email, hashedPassword, userName, instrument, music, grade, university]
       );
       return result.lastID;
     } catch (error) {
@@ -43,16 +43,16 @@ export class UserModel {
     }
   }
 
-  static async getUsernameByID(userID) {
+  static async getUsernameByID(userId) {
     const db = await createConnection();
     try {
       const row = await db.get(
-        'SELECT username FROM users WHERE id = ?',
-        [userID]
+        'SELECT userName FROM users WHERE id = ?',
+        [userId]
       );
-      return row ? row.username : null;
+      return row ? row.userName : null;
     } catch (error) {
-      console.error('Error fetching username by ID:', error);
+      console.error('Error fetching userName by ID:', error);
       throw error;
     } finally {
       await db.close();
@@ -64,10 +64,10 @@ export class UserModel {
     try {
       const hashedPassword = sha256(password);
       const row = await db.get(
-        'SELECT id, username FROM users WHERE email = ? AND hashed_password = ?',
+        'SELECT id, userName FROM users WHERE email = ? AND hashed_password = ?',
         [email, hashedPassword]
       );
-      return row ? { id: row.id, username: row.username } : null;
+      return row ? { id: row.id, userName: row.userName } : null;
     } catch (error) {
       console.error('Error authenticating user:', error);
       throw error;
