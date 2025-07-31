@@ -21,6 +21,9 @@ const isNewestOrder = ref(true);
 // #endregion
 const memoList = reactive([])
 
+const menuOpen = ref(false)
+let allUsers;
+
 // #region lifecycle
 onMounted(() => {
   registerSocketEvent()
@@ -109,6 +112,8 @@ const onReceiveEnter = (data) => {
     data.userId          // ユーザーIDを追加
   )
   addMessageToChatList(message);
+  // 誰かが入室してdbが更新されている可能性があるから更新リクエスト
+  socket.emit("getUserList",)
 }
 // サーバから受信した退室メッセージを受け取り画面上に表示する
 const onReceiveExit = (data) => {
@@ -163,7 +168,20 @@ const registerSocketEvent = () => {
   ); 
     addMessageToChatList(publishmessage);
   })
+
+  socket.on("userListResponse", (data) => {
+    allUsers = data
+  })
 }
+
+const toggleMenu = () => {
+  menuOpen.value = !menuOpen.value
+  socket.emit("getUserList",)
+}
+
+
+
+
 // #endregion
 </script>
 
@@ -174,60 +192,98 @@ const registerSocketEvent = () => {
       <h1 class="text-h3 font-weight-medium chat-title">Vue.js Chat チャットルーム</h1>
       <p class="main-header-user">ログインユーザ：{{ userName }}さん</p>
     </header>
-    <textarea v-model="chatContent" variant="outlined" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
-    <button class="button-normal button-post" @click="onPublish">投稿</button>
-    <button @click="onMemo" class="button-normal button-memo">メモ</button>
-          <div class="mt-5">
-        <v-btn
-            @click="sortByNewest"
-            :color="isNewestOrder ? 'primary' : 'grey'"  :variant="isNewestOrder ? 'flat' : 'flat'"
-            class="custom-sort-btn"
-            small >
-            新しい順
-          </v-btn>
-          <v-btn
-            @click="sortByOldest"
-            :color="!isNewestOrder ? 'primary' : 'grey'" :variant="!isNewestOrder ? 'flat' : 'flat'" 
-            class="custom-sort-btn"
-            small >
-            古い順
-          </v-btn>
-      </div>
-    <div class="mt-5" v-if="chatList.length !== 0">
-      <ul>
-        <li class="item mt-4" v-for="(chat, i) in chatList" :key="i">
-            <div v-if="chat.messageType === 0" class="entry-message">
-              <p>{{ chat.content }}</p>
-              <p>{{ chat.sendAt }}</p>   
-            </div>  
-            <div v-else-if="chat.messageType === 1" class="exit-message">
-              <p>{{ chat.content }}</p>
-              <p>{{ chat.sendAt }}</p>
-            </div>  
-            <div v-else-if="chat.messageType === 2 || chat.messageType === 3" class="normal-message" :class="{'reverse': chat.userId === userId }">
-              <div class="normal-message-user">
-                <p>{{ chat.sendBy }} </p>
-              </div>
-              <div class="normal-message-main"  :class="{ 'blue-border': chat.messageType === 3}">
-                <div class="normal-message-main-content">
-                  <p>{{ chat.content }} </p>
-                  
-                </div>
-                <div class="normal-message-main-time">
+    <div class="layout">
+       <button class="button-normal button-side" @click="toggleMenu">☰入力中のユーザー</button>
+      <!--ユーザー一覧 ここから-->
+      <nav class="side-nav" v-if="menuOpen">
+        
+        <div class="all-users">
+          <div v-for="(user, index) in allUsers.users" :key="index">
+            <div class="user-list-user">
+              <p>{{ user.userName }}</p>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <!--ユーザー一覧 ここまで-->
+      <div class="main-content">
+        <textarea v-model="chatContent" variant="outlined" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
+        <button class="button-normal button-post" @click="onPublish">投稿</button>
+        <button @click="onMemo" class="button-normal button-memo">メモ</button>
+              <div class="mt-5">
+            <v-btn
+                @click="sortByNewest"
+                :color="isNewestOrder ? 'primary' : 'grey'"  :variant="isNewestOrder ? 'flat' : 'flat'"
+                class="custom-sort-btn"
+                small >
+                新しい順
+              </v-btn>
+              <v-btn
+                @click="sortByOldest"
+                :color="!isNewestOrder ? 'primary' : 'grey'" :variant="!isNewestOrder ? 'flat' : 'flat'" 
+                class="custom-sort-btn"
+                small >
+                古い順
+              </v-btn>
+          </div>
+        <div class="mt-5" v-if="chatList.length !== 0">
+          <ul>
+            <li class="item mt-4" v-for="(chat, i) in chatList" :key="i">
+                <div v-if="chat.messageType === 0" class="entry-message">
+                  <p>{{ chat.content }}</p>
+                  <p>{{ chat.sendAt }}</p>   
+                </div>  
+                <div v-else-if="chat.messageType === 1" class="exit-message">
+                  <p>{{ chat.content }}</p>
                   <p>{{ chat.sendAt }}</p>
-                </div>
-              </div>           
-            </div>            
-          </li>
-        </ul>
+                </div>  
+                <div v-else-if="chat.messageType === 2 || chat.messageType === 3" class="normal-message" :class="{'reverse': chat.userId === userId }">
+                  <div class="normal-message-user">
+                    <p>{{ chat.sendBy }} </p>
+                  </div>
+                  <div class="normal-message-main"  :class="{ 'blue-border': chat.messageType === 3}">
+                    <div class="normal-message-main-content">
+                      <p>{{ chat.content }} </p>
+                    </div>
+                    <div class="normal-message-main-time">
+                      <p>{{ chat.sendAt }}</p>
+                    </div>
+                  </div>           
+                </div>            
+              </li>
+            </ul>
+          </div>
+        <router-link to="/" class="link">
+          <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
+        </router-link>
       </div>
-    <router-link to="/" class="link">
-      <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
-    </router-link>
+    </div>
   </div>
 </template>
 
 <style scoped>
+
+.all-users {
+  display: flex;
+  gap: 1px;
+  overflow-x: auto;   /* 横スクロールを有効にする */
+  white-space: nowrap; /* 改行させない */
+}
+
+.user-list-user {
+  display: inline-flex;
+  min-width: 150px;
+  height: 30px;
+  display: flex;
+  border-radius: 10px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  margin-top: 5px;
+  background-color: #b55e5e;
+  color: white;
+}
+
 .link {
   text-decoration: none;
 }
