@@ -29,8 +29,8 @@ export default (io, socket) => {
   socket.on("getUserInfo", async (data) => {
     try {
       const { UserModel } = await import("../src/db/models/userModel.js");
-      const userInfo = await UserModel.getUsernameByID(data.userId);
-      socket.emit("userInfoResponse", { userId: data.userId, userName: userInfo });
+      const userInfo = await UserModel.getUserInfoByID(data.userId);
+      socket.emit("userInfoResponse", userInfo);
     } catch (error) {
       console.error('Error fetching user info:', error);
       socket.emit("userInfoResponse", { userId: data.userId, error: 'Failed to fetch user info' });
