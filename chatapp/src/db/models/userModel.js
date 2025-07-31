@@ -47,7 +47,7 @@ export class UserModel {
     const db = await createConnection();
     try {
       const row = await db.get(
-        'SELECT userName, instrument, music, grade, university FROM users WHERE id = ?',
+        'SELECT userName, instrument, music, grade, university,last_login_at FROM users WHERE id = ?',
         [userId]
       );
       row.instrument = JSON.parse(row.instrument);

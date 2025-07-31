@@ -190,6 +190,8 @@ const onReceiveUserDetails = (response) => {
     selectedUserMusic.value = userDetails?.music ? userDetails.music.map(inst => musicMap[inst] || inst).join(', ') : 'N/A';
     selectedUserGrade.value = userDetails?.grade || 'N/A';
     selectedUserUniversity.value = userDetails?.university || 'N/A'; 
+    selectedUserLastLogin.value = userDetails?.last_login_at  || 'N/A'; 
+    selectedUserLastLogin.value = convertToJST(selectedUserLastLogin.value)
     isModalOpen.value = true;
 };
 // #endregion
@@ -234,7 +236,6 @@ const registerSocketEvent = () => {
 
 
   socket.on("userListResponse", (data) => {
-    console.log(data)
     allUsers = data
   })
   socket.on("userInfoResponse", (response) => {
@@ -247,7 +248,19 @@ const toggleMenu = () => {
   socket.emit("getUserList",)
 }
 
+// データベースの時間がUTC（協定世界時）だから日本時間にする(9時間ずらせばよい)
+function convertToJST(datetimeString) {
+  const utcDate = new Date(datetimeString.replace(" ", "T"));
+  const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
 
+  const yyyy = jstDate.getFullYear();
+  const mm = String(jstDate.getMonth() + 1).padStart(2, "0");
+  const dd = String(jstDate.getDate()).padStart(2, "0");
+  const hh = String(jstDate.getHours()).padStart(2, "0");
+  const min = String(jstDate.getMinutes()).padStart(2, "0");
+
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+}
 
 
 // #endregion
@@ -335,6 +348,7 @@ const toggleMenu = () => {
               <p v-if="selectedUserMusic && selectedUserMusic !== 'N/A'">好きな音楽: {{ selectedUserMusic }}</p>
               <p v-if="selectedUserGrade && selectedUserGrade !== 'N/A'">学年: {{ selectedUserGrade }}年</p>
               <p v-if="selectedUserUniversity && selectedUserUniversity !== 'N/A'">大学: {{ selectedUserUniversity }}</p>
+              <p v-if="selectedUserLastLogin && selectedUserLastLogin !== 'N/A'">最終ログイン日: {{ selectedUserLastLogin }}</p>
               <button @click="closeUserModal" class="button-normal">閉じる</button>
             </div>
           </div>
