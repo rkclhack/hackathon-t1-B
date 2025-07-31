@@ -33,6 +33,30 @@ const memoList = reactive([])
 const menuOpen = ref(false)
 let allUsers;
 
+const instrumentMap = {
+  'vocal': 'ボーカル',
+  'electric_guitar': 'エレキギター',
+  'acoustic_guitar': 'アコギ',
+  'bass': 'ベース',
+  'drum': 'ドラム',
+  'keyboard': 'キーボード',
+  'others': 'その他'
+};
+
+const musicMap = {
+  'pop': 'ポップ',
+  'rock': 'ロック',
+  'metal': 'メタル',
+  'punk': 'パンク',
+  'alternative_rock': 'オルタナティブ・ロック',
+  'indie_rock': 'インディー・ロック',
+  'pop_punk': 'ポップパンク',
+  'j-pop': 'J-POP',
+  'anime_song': 'アニソン',
+  'vocaloid': 'ボカロ',
+  'visual': 'ビジュアル系'
+};
+
 // #region lifecycle
 onMounted(() => {
   registerSocketEvent()
@@ -158,27 +182,15 @@ const onReceivePublish = (data) => {
 }
 
 const onReceiveUserDetails = (response) => {
-  // if (response.details) {
     const userDetails = response;
     // 取得した詳細情報をリアクティブ変数に格納
     // JSONフィールドはオブジェクトとして保存されているので、表示用に文字列化するか、適切に処理
     selectedUserInstrument.value = userDetails?.instrument 
-      ? userDetails.instrument.map(inst => instrumentMap[inst] || inst).join(', ') 
-      : 'N/A';
-    selectedUserMusic.value = userDetails?.music 
-      ? userDetails.music.map(music => musicMap[music] || music).join(', ') 
-      : 'N/A';
+      ? userDetails.instrument.map(inst => instrumentMap[inst] || inst).join(', ') : 'N/A';
+    selectedUserMusic.value = userDetails?.music ? userDetails.music.map(inst => instrumentMap[inst] || inst).join(', ') : 'N/A';
     selectedUserGrade.value = userDetails?.grade || 'N/A';
     selectedUserUniversity.value = userDetails?.university || 'N/A'; 
-    isModalOpen.value = true; // データが揃ったらモーダルを開く
-  // } else {
-  //   // エラーまたはユーザーが見つからない場合
-  //   selectedUserInstrument.value = '情報なし';
-  //   selectedUserMusic.value = '情報なし';
-  //   selectedUserGrade.value = '情報なし';
-  //   selectedUserUniversity.value = '情報なし';
-  //   isModalOpen.value = true; // エラーメッセージを表示するためにモーダルを開く
-  // }
+    isModalOpen.value = true;
 };
 // #endregion
 
@@ -312,22 +324,25 @@ const toggleMenu = () => {
         <router-link to="/" class="link">
           <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
         </router-link>
-            <div v-if="isModalOpen" class="modal-overlay" @click.self="closeUserModal">
-      <div class="modal-content">
-        <h2>ユーザー情報</h2>
-        <p>ユーザー名: {{ selectedUserName }}</p>
-        <p v-if="selectedUserInstrument && selectedUserInstrument !== 'N/A'">楽器: {{ selectedUserInstrument }}</p>
-        <p v-if="selectedUserMusic && selectedUserMusic !== 'N/A'">好きな音楽: {{ selectedUserMusic }}</p>
-        <p v-if="selectedUserGrade && selectedUserGrade !== 'N/A'">学年: {{ selectedUserGrade }}</p>
-        <p v-if="selectedUserUniversity && selectedUserUniversity !== 'N/A'">大学: {{ selectedUserUniversity }}</p>
-        <button @click="closeUserModal" class="button-normal">閉じる</button>
-      </div>
+        <Transition name="modal-fade">
+          <div v-if="isModalOpen" class="modal-overlay" @click.self="closeUserModal">
+            <div class="modal-content">
+              <h2>ユーザー情報</h2>
+              <p>ユーザー名: {{ selectedUserName }}</p>
+              <!-- ★修正: 日本語ラベルで表示 -->
+              <p v-if="selectedUserInstrument && selectedUserInstrument !== 'N/A'">楽器: {{ selectedUserInstrument }}</p>
+              <p v-if="selectedUserMusic && selectedUserMusic !== 'N/A'">好きな音楽: {{ selectedUserMusic }}</p>
+              <p v-if="selectedUserGrade && selectedUserGrade !== 'N/A'">学年: {{ selectedUserGrade }}年</p>
+              <p v-if="selectedUserUniversity && selectedUserUniversity !== 'N/A'">大学: {{ selectedUserUniversity }}</p>
+              <button @click="closeUserModal" class="button-normal">閉じる</button>
+            </div>
+          </div>
+        </Transition>
 
     </div>
       </div>
 
     </div>
-  </div>
 </template>
 
 <style scoped>
@@ -552,6 +567,28 @@ const toggleMenu = () => {
 
 .modal-content .button-normal:hover {
   background-color: #0056b3;
+}
+
+/* モーダル全体のフェードイン・アウト */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+/* モーダルコンテンツのスケールアップ・ダウン */
+.modal-fade-enter-active .modal-content,
+.modal-fade-leave-active .modal-content {
+  transition: transform 0.3s ease;
+}
+
+.modal-fade-enter-from .modal-content,
+.modal-fade-leave-to .modal-content {
+  transform: scale(0.9);
 }
 
 </style>
