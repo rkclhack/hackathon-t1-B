@@ -38,6 +38,7 @@ onMounted(() => {
     if (data.result) {
       userName.value = data.userName
       userId.value = data.userId // ユーザーIDを設定
+      socket.emit("enterEvent", { userName: data.userName, userId: data.userId }) // 入室イベント送信
       router.push({ name: "chat" }) // チャット画面へ遷移
     } else {
       alert("ログインに失敗しました: " + data.message)
