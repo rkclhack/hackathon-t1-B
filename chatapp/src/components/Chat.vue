@@ -187,7 +187,7 @@ const onReceiveUserDetails = (response) => {
     // JSONフィールドはオブジェクトとして保存されているので、表示用に文字列化するか、適切に処理
     selectedUserInstrument.value = userDetails?.instrument 
       ? userDetails.instrument.map(inst => instrumentMap[inst] || inst).join(', ') : 'N/A';
-    selectedUserMusic.value = userDetails?.music ? userDetails.music.map(inst => instrumentMap[inst] || inst).join(', ') : 'N/A';
+    selectedUserMusic.value = userDetails?.music ? userDetails.music.map(inst => musicMap[inst] || inst).join(', ') : 'N/A';
     selectedUserGrade.value = userDetails?.grade || 'N/A';
     selectedUserUniversity.value = userDetails?.university || 'N/A'; 
     isModalOpen.value = true;
