@@ -43,16 +43,16 @@ export class UserModel {
     }
   }
 
-  static async getUsernameByID(userId) {
+  static async getUserInfoByID(userId) {
     const db = await createConnection();
     try {
       const row = await db.get(
-        'SELECT userName FROM users WHERE id = ?',
+        'SELECT userName, instrument, music, grade, university FROM users WHERE id = ?',
         [userId]
       );
-      return row ? row.userName : null;
+      return row ? row : null;
     } catch (error) {
-      console.error('Error fetching userName by ID:', error);
+      console.error('Error fetching user info by ID:', error);
       throw error;
     } finally {
       await db.close();
@@ -70,6 +70,19 @@ export class UserModel {
       return row ? { id: row.id, userName: row.userName } : null;
     } catch (error) {
       console.error('Error authenticating user:', error);
+      throw error;
+    } finally {
+      await db.close();
+    }
+  }
+
+  static async getAllUsers() {
+    const db = await createConnection();
+    try {
+      const rows = await db.all('SELECT id, userName FROM users');
+      return rows;
+    } catch (error) {
+      console.error('Error fetching all users:', error);
       throw error;
     } finally {
       await db.close();
