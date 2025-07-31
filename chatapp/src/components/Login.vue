@@ -30,6 +30,7 @@ const onEnter = () => {
   // router.push({ name: "chat" })
 }
 
+
 // ログイン後の処理
 onMounted(() => {
   // サーバーからのログイン成功イベントを受信
@@ -48,7 +49,7 @@ const onRegister = () => {
   // 登録画面へ移動
   router.push({ name: "register" })
 }
-// #endregion
+
 </script>
 
 <template>
