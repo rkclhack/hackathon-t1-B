@@ -47,7 +47,51 @@ const onPublish = () => {
 
 }
 
-
+// 退室メッセージをサーバに送信する
+const onExit = () => {
+  const exitData = {
+    userName: userName.value
+  };
+  // サーバーに退室イベントを送信
+  socket.emit("exitEvent", exitData);
+}
+// メモを画面上に表示する
+const onMemo = () => {
+  // メモの内容を表示
+if (chatContent.value.trim() === "") return;
+  const memo = new ChatMessage(
+    3,                    // messageType: 3 = メモ
+    userName.value,
+    new Date(),
+    chatContent.value
+  );
+  const formatted = `[${memo.getFormattedTime()}] ${memo.sendBy}さんのメモ：${memo.content}`;
+  //↑これいらないかも(鈴木隆慎)
+  // memoList.unshift(formatted);      // メモ専用リストに追加
+  chatList.unshift(memo);      // 表示中チャットにも追加（任意）
+  chatContent.value = "";
+  // 入力欄を初期化
+}
+// #endregion
+// #region socket event handler
+// サーバから受信した入室メッセージ画面上に表示する
+const onReceiveEnter = (data) => {
+  const time = new Date()// 現在時刻
+  const message = new ChatMessage(
+    0,                    // messageType: 0 = 入室
+    data.userName,
+    time,           
+    `${data.userName}さんが入室しました。`
+  )
+  chatList.unshift(message);
+}
+// サーバから受信した退室メッセージを受け取り画面上に表示する
+const onReceiveExit = (data) => {
+}
+// サーバから受信した投稿メッセージを画面上に表示する
+const onReceivePublish = (data) => {
+  chatList.push()
+}
 // #endregion
 
 // #region local methods
