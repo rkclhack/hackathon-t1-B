@@ -222,7 +222,7 @@ const registerSocketEvent = () => {
   <div class="mx-auto my-5 px-4">
 
     <header class="main-header">
-      <h1 class="text-h3 font-weight-medium chat-title">Vue.js Chat チャットルーム</h1>
+      <h1 class="text-h3 font-weight-medium chat-title">関東軽音インカレサークルチャットルーム</h1>
       <p class="main-header-user">ログインユーザ：{{ userName }}さん</p>
     </header>
     <textarea v-model="chatContent" variant="outlined" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
@@ -253,7 +253,7 @@ const registerSocketEvent = () => {
             </div>
             <div v-else-if="chat.messageType === 1" class="exit-message">
               <p>{{ chat.content }}</p>
-              <p>{{ chat.sendAt }}</p>
+              <p>{{ chat.sendAt.toLocaleString() }}</p>
             </div>
             <div v-else-if="chat.messageType === 2 || chat.messageType === 3" class="normal-message" :class="{'reverse': chat.userId === userId }">
               <div class="normal-message-user">
