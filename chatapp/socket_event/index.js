@@ -68,4 +68,16 @@ export default (io, socket) => {
       socket.emit("registrationResponse", { result: false, error: 'Failed to register user' });
     }
   })
+
+  // ユーザー一覧を取得する
+  socket.on("getUserList", async () => {
+    try {
+      const { UserModel } = await import("../src/db/models/userModel.js");
+      const users = await UserModel.getAllUsers();
+      socket.emit("userListResponse", { users });
+    } catch (error) {
+      console.error('Error fetching user list:', error);
+      socket.emit("userListResponse", { error: 'Failed to fetch user list' });
+    }
+  })
 }
