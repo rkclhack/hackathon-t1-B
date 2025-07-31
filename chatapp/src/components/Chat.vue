@@ -48,7 +48,7 @@ const onPublish = () => {
 
   //この部分でNew Date()にしたのにも関わらずできない(鈴木隆慎)
   // 投稿内容(ChatMessageオブジェクト)生成
-  const postMessageObject = {userName:userName.value,postMessage:postMessage}
+  const postMessageObject = {userName:userName.value,postMessage:postMessage, userId:userId.value}
   socket.emit("publishEvent", postMessageObject)
   // 入力欄を初期化
   chatContent.value = ""
@@ -59,7 +59,7 @@ const onPublish = () => {
 // 退室メッセージをサーバに送信する
 const onExit = () => {
   const exitData = {
-    userName: userName.value
+    userName: userName.value,userId:userId.value
   };
   // サーバーに退室イベントを送信
   socket.emit("exitEvent", exitData);
@@ -116,7 +116,8 @@ const onReceivePublish = (data) => {
     data.messageType,
     data.sendBy,
     data.sendAt, // ChatMessage内でDateオブジェクトに変換されることを期待
-    data.content
+    data.content,
+    data.userId
   );
   addMessageToChatList(receivedMessage);
 }
@@ -200,11 +201,11 @@ const registerSocketEvent = () => {
               <p>{{ chat.content }}</p>
               <p>{{ chat.sendAt }}</p>
             </div>  
-            <div v-else-if="chat.messageType === 2 || chat.messageType === 3" class="normal-message">
+            <div v-else-if="chat.messageType === 2 || chat.messageType === 3" class="normal-message" :class="{'reverse': chat.userId === userId }">
               <div class="normal-message-user">
-                <p>{{ chat.sendBy }}</p>
+                <p>{{ chat.sendBy }} </p>
               </div>
-              <div class="normal-message-main"  :class="{ 'blue-border': chat.messageType === 3 }">
+              <div class="normal-message-main"  :class="{ 'blue-border': chat.messageType === 3}">
                 <div class="normal-message-main-content">
                   <p>{{ chat.content }} </p>
                   
@@ -338,5 +339,13 @@ const registerSocketEvent = () => {
   background-color: rgb(224, 224, 255);
 }
 
+.normal-message.reverse {
+  flex-direction: row-reverse;
+}
+
+.reverse .normal-message-main {
+  margin-right: 10px;
+  margin-left: 0px;
+}
 
 </style>
