@@ -7,7 +7,6 @@ import { ChatMessage } from '../objects/message.js'
 
 // #region global state
 const userName = inject("userName")
-const userId = inject("userId")
 // #endregion
 
 // #region local variable
@@ -48,7 +47,7 @@ const onPublish = () => {
 
   //この部分でNew Date()にしたのにも関わらずできない(鈴木隆慎)
   // 投稿内容(ChatMessageオブジェクト)生成
-  const postMessageObject = {userName:userName.value,postMessage:postMessage, userId:userId.value}
+  const postMessageObject = {userName:userName.value,postMessage:postMessage}
   socket.emit("publishEvent", postMessageObject)
   // 入力欄を初期化
   chatContent.value = ""
@@ -59,8 +58,7 @@ const onPublish = () => {
 // 退室メッセージをサーバに送信する
 const onExit = () => {
   const exitData = {
-    userName: userName.value,
-    userId: userId.value // ユーザーIDを追加
+    userName: userName.value
   };
   // サーバーに退室イベントを送信
   socket.emit("exitEvent", exitData);
@@ -73,8 +71,7 @@ if (chatContent.value.trim() === "") return;
     3,                    // messageType: 3 = メモ
     userName.value,
     new Date(),
-    chatContent.value,
-    userId.value // ユーザーIDを追加
+    chatContent.value
   );
   const formatted = `[${memo.getFormattedTime()}] ${memo.sendBy}さんのメモ：${memo.content}`;
   //↑これいらないかも(鈴木隆慎)
@@ -106,8 +103,7 @@ const onReceiveEnter = (data) => {
     0,                    // messageType: 0 = 入室
     data.userName,
     time,           
-    `${data.userName}さんが入室しました。`,
-    data.userId // ユーザーIDを追加
+    `${data.userName}さんが入室しました。`
   )
   addMessageToChatList(message);
 }
@@ -143,8 +139,7 @@ const registerSocketEvent = () => {
       1, // 仮のMessageType.EXIT_NOTIFICATION (1) - メッセージの種類を示します
       data.userName, // 退室したユーザーの名前
       new Date(),    // メッセージが生成された現在時刻
-      `${data.userName}さんが退室しました。`, // 実際に表示されるメッセージ本文
-      data.userId // ユーザーIDを追加
+      `${data.userName}さんが退室しました。` // 実際に表示されるメッセージ本文
     );
 
       // 作成した退室メッセージを chatList 配列に追加します。
@@ -157,10 +152,9 @@ const registerSocketEvent = () => {
      const publishmessage = new ChatMessage(
       2,
       data.userName,
-      new Date(),   // ISO 文字列でもOK
-      data.postMessage,
-      data.userId // ユーザーIDを追加
-  )
+     new Date(),   // ISO 文字列でもOK
+      data.postMessage
+  ); 
     addMessageToChatList(publishmessage);
   })
 }
@@ -339,6 +333,7 @@ const registerSocketEvent = () => {
 
 .blue-border {
   border: 2px solid #477eb9; /* 青 */
+  background-color: rgb(224, 224, 255);
 }
 
 
