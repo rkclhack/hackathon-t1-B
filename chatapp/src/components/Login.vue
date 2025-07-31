@@ -1,5 +1,5 @@
 <script setup>
-import { inject, ref } from "vue"
+import { inject, ref, onMounted } from "vue"
 import { useRouter } from "vue-router"
 import socketManager from '../socketManager.js'
 
