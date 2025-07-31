@@ -162,8 +162,12 @@ const onReceiveUserDetails = (response) => {
     const userDetails = response;
     // 取得した詳細情報をリアクティブ変数に格納
     // JSONフィールドはオブジェクトとして保存されているので、表示用に文字列化するか、適切に処理
-    selectedUserInstrument.value = userDetails?.instrument ? userDetails.instrument.join(', ') : 'N/A';
-    selectedUserMusic.value = userDetails?.music ? userDetails.music.join(', ') : 'N/A';
+    selectedUserInstrument.value = userDetails?.instrument 
+      ? userDetails.instrument.map(inst => instrumentMap[inst] || inst).join(', ') 
+      : 'N/A';
+    selectedUserMusic.value = userDetails?.music 
+      ? userDetails.music.map(music => musicMap[music] || music).join(', ') 
+      : 'N/A';
     selectedUserGrade.value = userDetails?.grade || 'N/A';
     selectedUserUniversity.value = userDetails?.university || 'N/A'; 
     isModalOpen.value = true; // データが揃ったらモーダルを開く
