@@ -39,7 +39,7 @@ const onRegister = () => {
 
 <template>
   <div class="mx-auto my-5 px-4">
-    <h1 class="page-title">Vue.js Chat サンプル</h1>
+    <h1 class="page-title">CircleJam ログイン</h1>
 
     <div class="form-group">
       <p>ユーザー名</p>
@@ -76,8 +76,9 @@ const onRegister = () => {
 .page-title {
   font-size: 24px;
   text-align: center;
-  color: #333;
+  color: rgb(59, 59, 244);
   font-weight: bold;
+  padding:8px
 }
 
 .form-group {
