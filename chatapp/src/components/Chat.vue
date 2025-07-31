@@ -67,7 +67,10 @@ const onExit = () => {
 // メモを画面上に表示する
 const onMemo = () => {
   // メモの内容を表示
-if (chatContent.value.trim() === "") return;
+if (chatContent.value.trim() === ""){
+  alert("文字列を入力してください")
+  return;
+}
   const memo = new ChatMessage(
     3,                    // messageType: 3 = メモ
     userName.value,
