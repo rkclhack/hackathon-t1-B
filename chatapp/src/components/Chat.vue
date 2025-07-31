@@ -7,6 +7,7 @@ import { ChatMessage } from '../objects/message.js'
 
 // #region global state
 const userName = inject("userName")
+const userId = inject("userId")
 // #endregion
 
 // #region local variable
