@@ -153,7 +153,7 @@ const registerSocketEvent = () => {
       2,
       data.userName,
      new Date(),   // ISO 文字列でもOK
-      data
+      data.postMessage
   ); 
     addMessageToChatList(publishmessage);
   })
