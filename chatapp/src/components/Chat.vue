@@ -153,7 +153,6 @@ const onReceiveUserDetails = (response) => {
     const userDetails = response;
     // 取得した詳細情報をリアクティブ変数に格納
     // JSONフィールドはオブジェクトとして保存されているので、表示用に文字列化するか、適切に処理
-    console.log(userDetails)
     selectedUserInstrument.value = userDetails?.instrument ? userDetails.instrument.join(', ') : 'N/A';
     selectedUserMusic.value = userDetails?.music ? userDetails.music.join(', ') : 'N/A';
     selectedUserGrade.value = userDetails?.grade || 'N/A';

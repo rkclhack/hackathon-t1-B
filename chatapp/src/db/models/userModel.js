@@ -50,7 +50,6 @@ export class UserModel {
         'SELECT userName, instrument, music, grade, university FROM users WHERE id = ?',
         [userId]
       );
-      console.log("row: ", row)
       return row ? row : null;
     } catch (error) {
       console.error('Error fetching user info by ID:', error);
