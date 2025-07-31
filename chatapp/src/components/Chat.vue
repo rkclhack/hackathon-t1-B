@@ -16,7 +16,7 @@ const socket = socketManager.getInstance()
 // #region reactive variable
 const chatContent = ref("")
 const chatList = reactive([])
-const sortOrder = ref('newest');
+const isNewestOrder = ref(true);
 // #endregion
 const memoList = reactive([])
 
@@ -26,38 +26,22 @@ onMounted(() => {
 })
 // #endregion
 
-//投稿をソートするプロパティ
-const sortedChatList = computed(() => {
-  // chatList のコピーを作成してソート（元の配列を変更しないため）
-  const listCopy = [...chatList];
-
-  if (sortOrder.value === 'newest') {
-    // 新しい順: sendAt が新しいものほどリストの上に来るように降順でソート
-    return listCopy.sort((a, b) => b.sendAt.getTime() - a.sendAt.getTime());
-  } else {
-    // 古い順: sendAt が古いものほどリストの上に来るように昇順でソート
-    return listCopy.sort((a, b) => a.sendAt.getTime() - b.sendAt.getTime());
-  }
-});
-
 // #region browser event handler
 // 投稿メッセージをサーバに送信する
 // 投稿ボタンを押したときの処理
 const onPublish = () => {
-  // 入力欄のメッセージを取得
   const postMessage = chatContent.value
-  // 入力欄を初期化
-  chatContent.value = ""
+  if (postMessage.trim() === "") return; // 空の投稿を防止
 
-  // 投稿内容(ChatMessageオブジェクト)生成
   const data = new ChatMessage(
       2,
       userName.value,
-     "2025",   // ISO 文字列でもOK
+      new Date(), // ここを現在時刻のDateオブジェクトに修正
       postMessage
   );
-  socket.emit("publishEvent", data)
-  //chatList.push(msg)
+
+  socket.emit("publishEvent", data);
+  chatContent.value = ""; // 入力欄を初期化
 
 }
 
@@ -91,14 +75,28 @@ if (chatContent.value.trim() === "") return;
 
 }
 
-// ★★★ ソート順を切り替えるメソッドの追加 ★★★
 const sortByNewest = () => {
-  sortOrder.value = 'newest';
+  if (!isNewestOrder.value) { // 現在が古い順なら反転
+    chatList.reverse();
+    isNewestOrder.value = true;
+  }
 };
 
 const sortByOldest = () => {
-  sortOrder.value = 'oldest';
+  if (isNewestOrder.value) { // 現在が新しい順なら反転
+    chatList.reverse();
+    isNewestOrder.value = false;
+  }
 };
+
+// // ★★★ ソート順を切り替えるメソッドの追加 ★★★
+// const sortByNewest = () => {
+//   sortOrder.value = 'newest';
+// };
+
+// const sortByOldest = () => {
+//   sortOrder.value = 'oldest';
+// };
 // #endregion
 
 // #region socket event handler
@@ -121,12 +119,19 @@ const onReceiveExit = (data) => {
 
 // サーバから受信した投稿メッセージを画面上に表示する
 const onReceivePublish = (data) => {
-  chatList.push()
+  const receivedMessage = new ChatMessage(
+    data.messageType,
+    data.sendBy,
+    data.sendAt, // ChatMessage内でDateオブジェクトに変換されることを期待
+    data.content
+  );
+  chatList.unshift(receivedMessage); // サーバーから受信したメッセージをリストに追加
 }
 // #endregion
 
 // #region local methods
 // イベント登録をまとめる
+
 const registerSocketEvent = () => {
   // 入室イベントを受け取ったら実行
   socket.on("enterEvent", (data) => {
@@ -170,16 +175,14 @@ const registerSocketEvent = () => {
       <div class="mt-5">
         <v-btn
             @click="sortByNewest"
-            :color="sortOrder === 'newest' ? 'primary' : ''"
-            :variant="sortOrder === 'newest' ? 'flat' : 'outlined'"
+            :color="isNewestOrder ? 'primary' : 'grey'"  :variant="isNewestOrder ? 'flat' : 'flat'"
             class="custom-sort-btn"
             small >
             新しい順
           </v-btn>
           <v-btn
             @click="sortByOldest"
-            :color="sortOrder === 'oldest' ? 'primary' : ''"
-            :variant="sortOrder === 'oldest' ? 'flat' : 'outlined'"
+            :color="!isNewestOrder ? 'primary' : 'grey'" :variant="!isNewestOrder ? 'flat' : 'flat'" 
             class="custom-sort-btn"
             small >
             古い順
@@ -188,12 +191,12 @@ const registerSocketEvent = () => {
       <div class="mt-5" v-if="chatList.length !== 0">
         <ul>
           <li class="item mt-4" v-for="(chat, i) in chatList" :key="i">
-              <div v-if="chat.messageType === 0 || chat.messageType === 1">
-                {{ chat.content }}      {{ chat.sendAt }}
-              </div>
-              <div v-else>
-                {{ chat.sendBy }}{{ chat.content }}     {{ chat.sendAt }}
-              </div>            
+            <div v-if="chat.messageType === 0 || chat.messageType === 1">
+              {{ chat.content }} {{ chat.sendAt.toLocaleString() }}
+            </div>
+            <div v-else>
+              {{ chat.sendBy }}：{{ chat.content }} {{ chat.sendAt.toLocaleString() }}
+            </div>            
           </li>
         </ul>
       </div>
