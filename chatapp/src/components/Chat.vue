@@ -88,15 +88,6 @@ const sortByOldest = () => {
     isNewestOrder.value = false;
   }
 };
-
-// // ★★★ ソート順を切り替えるメソッドの追加 ★★★
-// const sortByNewest = () => {
-//   sortOrder.value = 'newest';
-// };
-
-// const sortByOldest = () => {
-//   sortOrder.value = 'oldest';
-// };
 // #endregion
 
 // #region socket event handler
