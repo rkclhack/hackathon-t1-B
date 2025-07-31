@@ -9,7 +9,8 @@ onMounted(() => {
   socket.on("registrationResponse", (data) => {
     if (data.result) {
       alert("登録が完了しました")
-      router.push({ name: "login" })
+      // 前のページに戻る
+      router.back()
     } else {
       alert("登録に失敗しました: " + data.message)
     }
