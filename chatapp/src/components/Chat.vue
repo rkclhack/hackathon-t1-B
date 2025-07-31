@@ -18,6 +18,15 @@ const socket = socketManager.getInstance()
 const chatContent = ref("")
 const chatList = reactive([])
 const isNewestOrder = ref(true);
+const isModalOpen = ref(false);
+const selectedUserName = ref('');
+const selectedUserId = ref('');
+const selectedUserEmail = ref('');
+const selectedUserInstrument = ref('');
+const selectedUserMusic = ref('');
+const selectedUserGrade = ref('');
+const selectedUserUniversity = ref('');
+const selectedUserLastLogin = ref('');
 // #endregion
 const memoList = reactive([])
 
@@ -96,6 +105,24 @@ const sortByOldest = () => {
     isNewestOrder.value = false;
   }
 };
+
+const openUserModal = async (name, id) => {
+  selectedUserName.value = name;
+  selectedUserId.value = id;
+
+  // サーバーにユーザー詳細情報をリクエスト
+  socket.emit("getUserInfo", { userId: id });
+};
+
+const closeUserModal = () => {
+  isModalOpen.value = false;
+  selectedUserName.value = '';
+  selectedUserId.value = ''; 
+  selectedUserInstrument.value = ''; 
+  selectedUserMusic.value = ''; 
+  selectedUserGrade.value = '';  
+  selectedUserUniversity.value = ''; 
+};
 // #endregion
 // #region socket event handler
 // サーバから受信した入室メッセージ画面上に表示する
@@ -124,6 +151,26 @@ const onReceivePublish = (data) => {
   );
   addMessageToChatList(receivedMessage);
 }
+
+const onReceiveUserDetails = (response) => {
+  // if (response.details) {
+    const userDetails = response;
+    // 取得した詳細情報をリアクティブ変数に格納
+    // JSONフィールドはオブジェクトとして保存されているので、表示用に文字列化するか、適切に処理
+    selectedUserInstrument.value = userDetails?.instrument ? userDetails.instrument.join(', ') : 'N/A';
+    selectedUserMusic.value = userDetails?.music ? userDetails.music.join(', ') : 'N/A';
+    selectedUserGrade.value = userDetails?.grade || 'N/A';
+    selectedUserUniversity.value = userDetails?.university || 'N/A'; 
+    isModalOpen.value = true; // データが揃ったらモーダルを開く
+  // } else {
+  //   // エラーまたはユーザーが見つからない場合
+  //   selectedUserInstrument.value = '情報なし';
+  //   selectedUserMusic.value = '情報なし';
+  //   selectedUserGrade.value = '情報なし';
+  //   selectedUserUniversity.value = '情報なし';
+  //   isModalOpen.value = true; // エラーメッセージを表示するためにモーダルを開く
+  // }
+};
 // #endregion
 
 // #region local methods
@@ -163,6 +210,10 @@ const registerSocketEvent = () => {
   ); 
     addMessageToChatList(publishmessage);
   })
+
+  socket.on("userInfoResponse", (response) => {
+    onReceiveUserDetails(response);
+  });
 }
 // #endregion
 </script>
@@ -187,7 +238,7 @@ const registerSocketEvent = () => {
           </v-btn>
           <v-btn
             @click="sortByOldest"
-            :color="!isNewestOrder ? 'primary' : 'grey'" :variant="!isNewestOrder ? 'flat' : 'flat'" 
+            :color="!isNewestOrder ? 'primary' : 'grey'" :variant="!isNewestOrder ? 'flat' : 'flat'"
             class="custom-sort-btn"
             small >
             古い順
@@ -198,32 +249,44 @@ const registerSocketEvent = () => {
         <li class="item mt-4" v-for="(chat, i) in chatList" :key="i">
             <div v-if="chat.messageType === 0" class="entry-message">
               <p>{{ chat.content }}</p>
-              <p>{{ chat.sendAt }}</p>   
-            </div>  
+              <p>{{ chat.sendAt.toLocaleString() }}</p>
+            </div>
             <div v-else-if="chat.messageType === 1" class="exit-message">
               <p>{{ chat.content }}</p>
               <p>{{ chat.sendAt }}</p>
-            </div>  
+            </div>
             <div v-else-if="chat.messageType === 2 || chat.messageType === 3" class="normal-message" :class="{'reverse': chat.userId === userId }">
               <div class="normal-message-user">
-                <p>{{ chat.sendBy }} </p>
+                <p @click="openUserModal(chat.sendBy, userId)" class="clickable-username">{{ chat.sendBy }}</p>
               </div>
               <div class="normal-message-main"  :class="{ 'blue-border': chat.messageType === 3}">
                 <div class="normal-message-main-content">
                   <p>{{ chat.content }} </p>
-                  
+
                 </div>
                 <div class="normal-message-main-time">
-                  <p>{{ chat.sendAt }}</p>
+                  <p>{{ chat.sendAt.toLocaleString() }}</p>
                 </div>
-              </div>           
-            </div>            
+              </div>
+            </div>
           </li>
         </ul>
       </div>
     <router-link to="/" class="link">
       <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
     </router-link>
+
+    <div v-if="isModalOpen" class="modal-overlay" @click.self="closeUserModal">
+      <div class="modal-content">
+        <h2>ユーザー情報</h2>
+        <p>ユーザー名: {{ selectedUserName }}</p>
+        <p v-if="selectedUserInstrument && selectedUserInstrument !== 'N/A'">楽器: {{ selectedUserInstrument }}</p>
+        <p v-if="selectedUserMusic && selectedUserMusic !== 'N/A'">好きな音楽: {{ selectedUserMusic }}</p>
+        <p v-if="selectedUserGrade && selectedUserGrade !== 'N/A'">学年: {{ selectedUserGrade }}</p>
+        <p v-if="selectedUserUniversity && selectedUserUniversity !== 'N/A'">大学: {{ selectedUserUniversity }}</p>
+        <button @click="closeUserModal" class="button-normal">閉じる</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -309,9 +372,29 @@ const registerSocketEvent = () => {
   border-radius: 10px;
   justify-content: center;
   align-items: center;
-  border-radius: 10px;
+  /* border-radius: 10px; ← 重複しているので削除してもOK */
   background-color: #423636;
   color: white;
+  /* ★変更: flex-direction を column にして、p タグが中央に来るように調整 */
+  flex-direction: column; 
+}
+
+/* ★追加: ユーザー名のクリック感 */
+.clickable-username {
+  cursor: pointer; /* マウスカーソルを指の形にする */
+  transition: background-color 0.2s, transform 0.1s; /* スムーズなアニメーション */
+  padding: 5px 10px; /* クリックできる範囲を広げる */
+  border-radius: 5px; /* 角を丸くする */
+}
+
+.clickable-username:hover {
+  background-color: rgba(255, 255, 255, 0.2); /* ホバー時に薄い背景色 */
+  text-decoration: underline; /* ホバー時に下線 */
+}
+
+.clickable-username:active {
+  transform: translateY(1px); /* クリック時に少し下にずれる */
+  background-color: rgba(255, 255, 255, 0.3); /* クリック時に少し濃い背景色 */
 }
 
 .normal-message-main {
@@ -349,6 +432,59 @@ const registerSocketEvent = () => {
 .reverse .normal-message-main {
   margin-right: 10px;
   margin-left: 0px;
+}
+/* ★追加: モーダル関連のスタイル */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7); /* 半透明の黒背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* 他の要素より手前に表示 */
+}
+
+.modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  min-width: 300px;
+  max-width: 80%;
+  text-align: center;
+  position: relative; /* ボタンの配置のため */
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.modal-content p {
+  font-size: 1.1em;
+  margin-bottom: 25px;
+  color: #555;
+}
+
+/* モーダル内のボタンのスタイル調整 */
+.modal-content .button-normal {
+  background-color: #007bff; /* 青色のボタン */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: auto; /* 全幅ではなく内容に合わせる */
+  margin-top: 15px; /* 上部に少しスペース */
+}
+
+.modal-content .button-normal:hover {
+  background-color: #0056b3;
 }
 
 </style>
