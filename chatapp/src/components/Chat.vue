@@ -218,6 +218,7 @@ const registerSocketEvent = () => {
 
 
   socket.on("userListResponse", (data) => {
+    console.log(data)
     allUsers = data
   })
   socket.on("userInfoResponse", (response) => {
@@ -244,14 +245,14 @@ const toggleMenu = () => {
       <p class="main-header-user">ログインユーザ：{{ userName }}さん</p>
     </header>
     <div class="layout">
-       <button class="button-normal button-side" @click="toggleMenu">☰入力中のユーザー</button>
+       <button class="button-normal button-side" @click="toggleMenu">☰ユーザー一覧</button>
       <!--ユーザー一覧 ここから-->
       <nav class="side-nav" v-if="menuOpen">
         
         <div class="all-users">
           <div v-for="(user, index) in allUsers.users" :key="index">
             <div class="user-list-user">
-              <p>{{ user.userName }}</p>
+              <p @click="openUserModal(user.userName, user.id)" class="clickable-username">{{ user.userName }}</p>
             </div>
           </div>
         </div>
