@@ -69,8 +69,6 @@ const onRegister = () => {
     grade: inputGrade.value
   }
 
-  console.log("instruments:", Array.from(inputFavoriteMusic.value))
-
   // 登録イベント送信
   socket.emit("registerUser", registrationData)
 }
