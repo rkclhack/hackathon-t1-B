@@ -36,14 +36,13 @@ const onPublish = () => {
       alert("文字列を入力してください。")
       return
   }
-  // 入力欄を初期化
-  chatContent.value = ""
 
   //この部分でNew Date()にしたのにも関わらずできない(鈴木隆慎)
   // 投稿内容(ChatMessageオブジェクト)生成
- 
-  socket.emit("publishEvent", postMessage)
-
+  const postMessageObject = {userName:userName.value,postMessage:postMessage}
+  socket.emit("publishEvent", postMessageObject)
+  // 入力欄を初期化
+  chatContent.value = ""
   //chatList.push(msg)
 
 }
@@ -134,10 +133,10 @@ const registerSocketEvent = () => {
   socket.on("publishEvent", (data) => {
      const publishmessage = new ChatMessage(
       2,
-      userName.value,
+      data.userName,
      new Date(),   // ISO 文字列でもOK
-      data
-  );
+      data.postMessage
+  )
     chatList.unshift(publishmessage)
 
   })
