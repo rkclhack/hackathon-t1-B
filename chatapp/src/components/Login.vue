@@ -33,6 +33,11 @@ const onEnter = () => {
   // チャット画面へ遷移
   router.push({ name: "chat" })
 }
+
+const onRegister = () => {
+  // 登録画面へ移動
+  router.push({ name: "register" })
+}
 // #endregion
 </script>
 
@@ -44,6 +49,7 @@ const onEnter = () => {
       <input type="text" class="user-name-text" v-model="inputUserName" />
     </div>
     <button type="button" @click="onEnter" class="button-normal">入室する</button>
+    <button type="button" @click="onRegister" class="button-normal">新規登録</button>
   </div>
 </template>
 
