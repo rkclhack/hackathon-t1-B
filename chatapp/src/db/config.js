@@ -4,7 +4,7 @@ import { open } from 'sqlite';
 export const createConnection = async () => {
   try {
     const db = await open({
-      filename: './chatapp.db',
+      filename: './src/db/chatapp.db',
       driver: sqlite3.Database
     });
     console.log('SQLite connected successfully');
