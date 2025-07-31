@@ -75,4 +75,17 @@ export class UserModel {
       await db.close();
     }
   }
+
+  static async getAllUsers() {
+    const db = await createConnection();
+    try {
+      const rows = await db.all('SELECT id, userName FROM users');
+      return rows;
+    } catch (error) {
+      console.error('Error fetching all users:', error);
+      throw error;
+    } finally {
+      await db.close();
+    }
+  }
 }

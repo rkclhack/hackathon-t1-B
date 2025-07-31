@@ -68,12 +68,12 @@ const onExit = () => {
 const onMemo = () => {
   // メモの内容を表示
 if (chatContent.value.trim() === "") return;
-  console.log("userId", userId.value);
   const memo = new ChatMessage(
     3,                    // messageType: 3 = メモ
     userName.value,
     new Date(),
-    chatContent.value
+    chatContent.value,
+    userId.value          // ユーザーIDを追加
   );
   addMessageToChatList(memo);
   chatContent.value = "";
@@ -102,7 +102,8 @@ const onReceiveEnter = (data) => {
     0,                    // messageType: 0 = 入室
     data.userName,
     time,           
-    `${data.userName}さんが入室しました。`
+    `${data.userName}さんが入室しました。`,
+    data.userId          // ユーザーIDを追加
   )
   addMessageToChatList(message);
 }
@@ -138,7 +139,8 @@ const registerSocketEvent = () => {
       1, // 仮のMessageType.EXIT_NOTIFICATION (1) - メッセージの種類を示します
       data.userName, // 退室したユーザーの名前
       new Date(),    // メッセージが生成された現在時刻
-      `${data.userName}さんが退室しました。` // 実際に表示されるメッセージ本文
+      `${data.userName}さんが退室しました。`, // 実際に表示されるメッセージ本文
+      data.userId    // ユーザーIDを追加
     );
 
       // 作成した退室メッセージを chatList 配列に追加します。
@@ -152,7 +154,8 @@ const registerSocketEvent = () => {
       2,
       data.userName,
      new Date(),   // ISO 文字列でもOK
-      data.postMessage
+      data.postMessage,
+      data.userId   // ユーザーIDを追加
   ); 
     addMessageToChatList(publishmessage);
   })
