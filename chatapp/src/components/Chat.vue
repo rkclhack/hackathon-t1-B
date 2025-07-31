@@ -1,5 +1,5 @@
 <script setup>
-import { inject, ref, reactive, onMounted } from "vue"
+import { inject, ref, reactive, onMounted, computed } from "vue"
 import socketManager from '../socketManager.js'
 import { ChatMessage } from '../objects/message.js'
 
@@ -17,6 +17,7 @@ const socket = socketManager.getInstance()
 // #region reactive variable
 const chatContent = ref("")
 const chatList = reactive([])
+const isNewestOrder = ref(true);
 // #endregion
 const memoList = reactive([])
 
@@ -26,11 +27,18 @@ onMounted(() => {
 })
 // #endregion
 
+const addMessageToChatList = (message) => {
+  if (isNewestOrder.value) {
+    chatList.unshift(message); // 新しい順なら先頭に追加
+  } else {
+    chatList.push(message);    // 古い順なら末尾に追加
+  }
+};
+
 // #region browser event handler
 // 投稿メッセージをサーバに送信する
 // 投稿ボタンを押したときの処理
 const onPublish = () => {
-  // 入力欄のメッセージを取得
   const postMessage = chatContent.value
   // 空の場合エラー
   if(postMessage.trim() === ""){
@@ -71,10 +79,24 @@ if (chatContent.value.trim() === "") return;
   const formatted = `[${memo.getFormattedTime()}] ${memo.sendBy}さんのメモ：${memo.content}`;
   //↑これいらないかも(鈴木隆慎)
   // memoList.unshift(formatted);      // メモ専用リストに追加
-  chatList.unshift(memo);      // 表示中チャットにも追加（任意）
+  addMessageToChatList(memo);
   chatContent.value = "";
   // 入力欄を初期化
 }
+
+const sortByNewest = () => {
+  if (!isNewestOrder.value) { // 現在が古い順なら反転
+    chatList.reverse();
+    isNewestOrder.value = true;
+  }
+};
+
+const sortByOldest = () => {
+  if (isNewestOrder.value) { // 現在が新しい順なら反転
+    chatList.reverse();
+    isNewestOrder.value = false;
+  }
+};
 // #endregion
 // #region socket event handler
 // サーバから受信した入室メッセージ画面上に表示する
@@ -87,19 +109,26 @@ const onReceiveEnter = (data) => {
     `${data.userName}さんが入室しました。`,
     data.userId // ユーザーIDを追加
   )
-  chatList.unshift(message);
+  addMessageToChatList(message);
 }
 // サーバから受信した退室メッセージを受け取り画面上に表示する
 const onReceiveExit = (data) => {
 }
 // サーバから受信した投稿メッセージを画面上に表示する
 const onReceivePublish = (data) => {
-  chatList.push()
+  const receivedMessage = new ChatMessage(
+    data.messageType,
+    data.sendBy,
+    data.sendAt, // ChatMessage内でDateオブジェクトに変換されることを期待
+    data.content
+  );
+  addMessageToChatList(receivedMessage);
 }
 // #endregion
 
 // #region local methods
 // イベント登録をまとめる
+
 const registerSocketEvent = () => {
   // 入室イベントを受け取ったら実行
   socket.on("enterEvent", (data) => {
@@ -120,7 +149,7 @@ const registerSocketEvent = () => {
 
       // 作成した退室メッセージを chatList 配列に追加します。
       // chatList は template で v-for ループされており、これに追加すると画面に表示されます。
-      chatList.unshift(exitMessage);
+      addMessageToChatList(exitMessage);
   })
 // a
   // 投稿イベントを受け取ったら実行
@@ -132,8 +161,7 @@ const registerSocketEvent = () => {
       data.postMessage,
       data.userId // ユーザーIDを追加
   )
-    chatList.unshift(publishmessage)
-
+    addMessageToChatList(publishmessage);
   })
 }
 // #endregion
@@ -149,6 +177,22 @@ const registerSocketEvent = () => {
     <textarea v-model="chatContent" variant="outlined" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
     <button class="button-normal button-post" @click="onPublish">投稿</button>
     <button @click="onMemo" class="button-normal button-memo">メモ</button>
+          <div class="mt-5">
+        <v-btn
+            @click="sortByNewest"
+            :color="isNewestOrder ? 'primary' : 'grey'"  :variant="isNewestOrder ? 'flat' : 'flat'"
+            class="custom-sort-btn"
+            small >
+            新しい順
+          </v-btn>
+          <v-btn
+            @click="sortByOldest"
+            :color="!isNewestOrder ? 'primary' : 'grey'" :variant="!isNewestOrder ? 'flat' : 'flat'" 
+            class="custom-sort-btn"
+            small >
+            古い順
+          </v-btn>
+      </div>
     <div class="mt-5" v-if="chatList.length !== 0">
       <ul>
         <li class="item mt-4" v-for="(chat, i) in chatList" :key="i">
