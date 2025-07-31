@@ -5,6 +5,7 @@ import socketManager from '../socketManager.js'
 
 // #region global state
 const userName = inject("userName")
+const userId = inject("userId")
 // #endregion
 
 // #region local variable
@@ -20,29 +21,32 @@ const inputPassword = ref("") // パスワード用
 // #region browser event handler
 // 入室処理
 const onEnter = () => {
-  if (inputUserName.value.trim() === "") {
-    alert("ユーザー名を入力してください")
-    return
-  }
-  // 入室イベント送信
-  socket.emit("enterEvent", { userName: inputUserName.value })
-  userName.value = inputUserName.value
-  router.push({ name: "chat" })
-}
-
-// ユーザー登録処理
-const onRegister = () => {
   if (inputUserName.value.trim() === "" || inputPassword.value.trim() === "") {
     alert("ユーザー名とパスワードを入力してください")
     return
   }
-  // 登録処理の例（サーバー側にemit）
-  socket.emit("registerEvent", {
-    userName: inputUserName.value,
-    password: inputPassword.value,
+  // 入室イベント送信
+  socket.emit("login", { userName: inputUserName.value })
+  // router.push({ name: "chat" })
+}
+
+// ログイン後の処理
+onMounted(() => {
+  // サーバーからのログイン成功イベントを受信
+  socket.on("loginResponse", (data) => {
+    if (data.result) {
+      userName.value = data.userName
+      userId.value = data.userId // ユーザーIDを設定
+      router.push({ name: "chat" }) // チャット画面へ遷移
+    } else {
+      alert("ログインに失敗しました: " + data.message)
+    }
   })
-  alert("ユーザー登録が完了しました")
-  inputPassword.value = "" // パスワードクリア
+})
+
+// ユーザー登録処理
+const onRegister = () => {
+  router.push({ name: "register" }) // 登録画面へ遷移
 }
 // #endregion
 </script>
