@@ -6,7 +6,7 @@ export class ChatMessage {
    * @param {string} content      - メッセージ本文
    * @param {Integer} userId      - ユーザーID
    */
-  constructor(messageType, sendBy, sendAt, content) {
+  constructor(messageType, sendBy, sendAt, content, userId) {
     this.messageType = messageType;
     this.sendBy = sendBy;
     this.sendAt = sendAt instanceof Date ? sendAt : new Date(sendAt);
