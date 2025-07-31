@@ -67,15 +67,13 @@ const onExit = () => {
 const onMemo = () => {
   // メモの内容を表示
 if (chatContent.value.trim() === "") return;
+  console.log("userId", userId.value);
   const memo = new ChatMessage(
     3,                    // messageType: 3 = メモ
     userName.value,
     new Date(),
     chatContent.value
   );
-  const formatted = `[${memo.getFormattedTime()}] ${memo.sendBy}さんのメモ：${memo.content}`;
-  //↑これいらないかも(鈴木隆慎)
-  // memoList.unshift(formatted);      // メモ専用リストに追加
   addMessageToChatList(memo);
   chatContent.value = "";
   // 入力欄を初期化
