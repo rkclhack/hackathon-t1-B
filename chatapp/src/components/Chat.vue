@@ -30,10 +30,9 @@ const selectedUserLastLogin = ref('');
 // #endregion
 const memoList = reactive([])
 
-<<<<<<< Updated upstream
 const menuOpen = ref(false)
 let allUsers;
-=======
+
 const instrumentMap = {
   'vocal': 'ボーカル',
   'electric_guitar': 'エレキギター',
@@ -57,7 +56,6 @@ const musicMap = {
   'vocaloid': 'ボカロ',
   'visual': 'ビジュアル系'
 };
->>>>>>> Stashed changes
 
 // #region lifecycle
 onMounted(() => {
@@ -322,48 +320,29 @@ const toggleMenu = () => {
             </div>
           </li>
         </ul>
-<<<<<<< Updated upstream
           </div>
         <router-link to="/" class="link">
           <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
         </router-link>
-            <div v-if="isModalOpen" class="modal-overlay" @click.self="closeUserModal">
-      <div class="modal-content">
-        <h2>ユーザー情報</h2>
-        <p>ユーザー名: {{ selectedUserName }}</p>
-        <p v-if="selectedUserInstrument && selectedUserInstrument !== 'N/A'">楽器: {{ selectedUserInstrument }}</p>
-        <p v-if="selectedUserMusic && selectedUserMusic !== 'N/A'">好きな音楽: {{ selectedUserMusic }}</p>
-        <p v-if="selectedUserGrade && selectedUserGrade !== 'N/A'">学年: {{ selectedUserGrade }}</p>
-        <p v-if="selectedUserUniversity && selectedUserUniversity !== 'N/A'">大学: {{ selectedUserUniversity }}</p>
-        <button @click="closeUserModal" class="button-normal">閉じる</button>
-      </div>
+        <Transition name="modal-fade">
+          <div v-if="isModalOpen" class="modal-overlay" @click.self="closeUserModal">
+            <div class="modal-content">
+              <h2>ユーザー情報</h2>
+              <p>ユーザー名: {{ selectedUserName }}</p>
+              <!-- ★修正: 日本語ラベルで表示 -->
+              <p v-if="selectedUserInstrument && selectedUserInstrument !== 'N/A'">楽器: {{ selectedUserInstrument }}</p>
+              <p v-if="selectedUserMusic && selectedUserMusic !== 'N/A'">好きな音楽: {{ selectedUserMusic }}</p>
+              <p v-if="selectedUserGrade && selectedUserGrade !== 'N/A'">学年: {{ selectedUserGrade }}</p>
+              <p v-if="selectedUserUniversity && selectedUserUniversity !== 'N/A'">大学: {{ selectedUserUniversity }}</p>
+              <button @click="closeUserModal" class="button-normal">閉じる</button>
+            </div>
+          </div>
+        </Transition>
 
     </div>
       </div>
 
     </div>
-=======
-      </div>
-    <router-link to="/" class="link">
-      <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
-    </router-link>
-
-    <Transition name="modal-fade">
-      <div v-if="isModalOpen" class="modal-overlay" @click.self="closeUserModal">
-        <div class="modal-content">
-          <h2>ユーザー情報</h2>
-          <p>ユーザー名: {{ selectedUserName }}</p>
-          <!-- ★修正: 日本語ラベルで表示 -->
-          <p v-if="selectedUserInstrument && selectedUserInstrument !== 'N/A'">楽器: {{ selectedUserInstrument }}</p>
-          <p v-if="selectedUserMusic && selectedUserMusic !== 'N/A'">好きな音楽: {{ selectedUserMusic }}</p>
-          <p v-if="selectedUserGrade && selectedUserGrade !== 'N/A'">学年: {{ selectedUserGrade }}</p>
-          <p v-if="selectedUserUniversity && selectedUserUniversity !== 'N/A'">大学: {{ selectedUserUniversity }}</p>
-          <button @click="closeUserModal" class="button-normal">閉じる</button>
-        </div>
-      </div>
-    </Transition>
->>>>>>> Stashed changes
-  </div>
 </template>
 
 <style scoped>
