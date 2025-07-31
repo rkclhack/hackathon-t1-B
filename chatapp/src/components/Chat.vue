@@ -20,6 +20,13 @@ const chatList = reactive([])
 const isNewestOrder = ref(true);
 const isModalOpen = ref(false);
 const selectedUserName = ref('');
+const selectedUserId = ref('');
+const selectedUserEmail = ref('');
+const selectedUserInstrument = ref('');
+const selectedUserMusic = ref('');
+const selectedUserGrade = ref('');
+const selectedUserUniversity = ref('');
+const selectedUserLastLogin = ref('');
 // #endregion
 const memoList = reactive([])
 
@@ -96,14 +103,22 @@ const sortByOldest = () => {
   }
 };
 
-const openUserModal = (name) => {
+const openUserModal = async (name, id) => {
   selectedUserName.value = name;
-  isModalOpen.value = true;
+  selectedUserId.value = id;
+
+  // サーバーにユーザー詳細情報をリクエスト
+  socket.emit("getUserInfo", { userId: id });
 };
 
 const closeUserModal = () => {
   isModalOpen.value = false;
   selectedUserName.value = '';
+  selectedUserId.value = ''; 
+  selectedUserInstrument.value = ''; 
+  selectedUserMusic.value = ''; 
+  selectedUserGrade.value = '';  
+  selectedUserUniversity.value = ''; 
 };
 // #endregion
 // #region socket event handler
@@ -132,6 +147,27 @@ const onReceivePublish = (data) => {
   );
   addMessageToChatList(receivedMessage);
 }
+
+const onReceiveUserDetails = (response) => {
+  // if (response.details) {
+    const userDetails = response;
+    // 取得した詳細情報をリアクティブ変数に格納
+    // JSONフィールドはオブジェクトとして保存されているので、表示用に文字列化するか、適切に処理
+    console.log(userDetails)
+    selectedUserInstrument.value = userDetails?.instrument ? userDetails.instrument.join(', ') : 'N/A';
+    selectedUserMusic.value = userDetails?.music ? userDetails.music.join(', ') : 'N/A';
+    selectedUserGrade.value = userDetails?.grade || 'N/A';
+    selectedUserUniversity.value = userDetails?.university || 'N/A'; 
+    isModalOpen.value = true; // データが揃ったらモーダルを開く
+  // } else {
+  //   // エラーまたはユーザーが見つからない場合
+  //   selectedUserInstrument.value = '情報なし';
+  //   selectedUserMusic.value = '情報なし';
+  //   selectedUserGrade.value = '情報なし';
+  //   selectedUserUniversity.value = '情報なし';
+  //   isModalOpen.value = true; // エラーメッセージを表示するためにモーダルを開く
+  // }
+};
 // #endregion
 
 // #region local methods
@@ -171,6 +207,10 @@ const registerSocketEvent = () => {
   ); 
     addMessageToChatList(publishmessage);
   })
+
+  socket.on("userInfoResponse", (response) => {
+    onReceiveUserDetails(response);
+  });
 }
 // #endregion
 </script>
@@ -214,7 +254,7 @@ const registerSocketEvent = () => {
             </div>
             <div v-else-if="chat.messageType === 2 || chat.messageType === 3" class="normal-message">
               <div class="normal-message-user">
-                <p @click="openUserModal(chat.sendBy)" class="clickable-username">{{ chat.sendBy }}</p>
+                <p @click="openUserModal(chat.sendBy, userId)" class="clickable-username">{{ chat.sendBy }}</p>
               </div>
               <div class="normal-message-main"  :class="{ 'blue-border': chat.messageType === 3 }">
                 <div class="normal-message-main-content">
@@ -237,6 +277,10 @@ const registerSocketEvent = () => {
       <div class="modal-content">
         <h2>ユーザー情報</h2>
         <p>ユーザー名: {{ selectedUserName }}</p>
+        <p v-if="selectedUserInstrument && selectedUserInstrument !== 'N/A'">楽器: {{ selectedUserInstrument }}</p>
+        <p v-if="selectedUserMusic && selectedUserMusic !== 'N/A'">好きな音楽: {{ selectedUserMusic }}</p>
+        <p v-if="selectedUserGrade && selectedUserGrade !== 'N/A'">学年: {{ selectedUserGrade }}</p>
+        <p v-if="selectedUserUniversity && selectedUserUniversity !== 'N/A'">大学: {{ selectedUserUniversity }}</p>
         <button @click="closeUserModal" class="button-normal">閉じる</button>
       </div>
     </div>
