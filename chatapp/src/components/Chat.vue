@@ -293,6 +293,9 @@ function convertToJST(datetimeString) {
         <textarea v-model="chatContent" variant="outlined" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
         <button class="button-normal button-post" @click="onPublish">投稿</button>
         <button @click="onMemo" class="button-normal button-memo">メモ</button>
+        <router-link to="/" class="link">
+          <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
+        </router-link>
               <div class="mt-5">
             <v-btn
                 @click="sortByNewest"
@@ -337,9 +340,6 @@ function convertToJST(datetimeString) {
           </li>
         </ul>
           </div>
-        <router-link to="/" class="link">
-          <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
-        </router-link>
         <Transition name="modal-fade">
           <div v-if="isModalOpen" class="modal-overlay" @click.self="closeUserModal">
             <div class="modal-content">
