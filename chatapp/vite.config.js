@@ -7,16 +7,23 @@ import fs from "fs"; // fsモジュールをインポート
 export default defineConfig(({ command, mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
 
+  // SSL証明書の存在確認
+  const sslKeyPath = "/etc/ssl/private.key";
+  const sslCertPath = "/etc/ssl/certificate.crt";
+  const httpsConfig = fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath)
+    ? {
+        key: fs.readFileSync(sslKeyPath),
+        cert: fs.readFileSync(sslCertPath)
+      }
+    : false;
+
   return {
     plugins: [vue(), socketIoPlugin({ socketEvents })],
     server: {
       host: true,
       port: parseInt(env.PORT) || 3000,
       strictPort: true,
-      https: { // HTTPS設定を追加
-        key: fs.readFileSync("/etc/ssl/private.key"), // 秘密鍵のパス
-        cert: fs.readFileSync("/etc/ssl/certificate.crt") // 証明書のパス
-      }
+      https: httpsConfig // 証明書が存在しない場合はHTTPで起動
     }
   };
 });

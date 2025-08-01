@@ -1,7 +1,11 @@
 import { Server } from "socket.io"
 
 const connectionEvents = (io, socketEvents) => {
-  io.on("connection", socket => socketEvents(io, socket))
+  io.on("connection", async socket => {
+    if (typeof socketEvents === 'function') {
+      await socketEvents(io, socket)
+    }
+  })
 }
 
 const socketEvents = (io, socket) => {
