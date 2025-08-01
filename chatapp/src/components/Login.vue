@@ -62,8 +62,8 @@ const onRegister = () => {
 
 <template>
   <div class="mx-auto my-5 px-4">
-    <h1 class="page-title">関東軽音インカレサークルチャットルーム ログイン</h1>
-
+    <h1 class="page-title">関東軽音インカレサークル</h1>
+    <h1 class="page-title" style="padding:0px">チャットルームログイン</h1>
     <div class="form-group">
       <p>メールアドレス</p>
       <input type="email" class="user-name-text" v-model="inputEmail" />
