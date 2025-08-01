@@ -106,7 +106,7 @@ const onRegister = () => {
       <p>メールアドレス</p>
       <input type="text" class="user-name-text" v-model="inputEmail" />
       <p>パスワード</p>
-      <input type="text" class="user-name-text" v-model="inputPassword" />
+      <input type="password" class="user-name-text" v-model="inputPassword" />
       <p>名前</p>
       <input type="text" class="user-name-text" v-model="inputUserName" />
       <!-- <p>楽器</p>
