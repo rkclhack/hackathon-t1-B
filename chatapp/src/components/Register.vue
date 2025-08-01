@@ -61,8 +61,26 @@ const genres = ref([
 
 
 const onRegister = () => {
-  if (inputUserName.value.trim() === "" || inputEmail.value.trim() === "" || inputPassword.value.trim() === "") {
-    alert("ユーザー名、メールアドレス、パスワードを入力してください")
+  if (
+    inputUserName.value.trim() === "" ||
+    inputEmail.value.trim() === "" ||
+    inputPassword.value.trim() === "" ||
+    inputUniversity.value.trim() === "" ||
+    inputGrade.value === "" ||
+    inputInstruments.value.length === 0 ||
+    inputFavoriteMusic.value.length === 0
+  ) {
+    let message = ""
+    if (inputEmail.value.trim() === "") message += "メールアドレスを入力してください。\n"
+    if (inputPassword.value.trim() === "") message += "パスワードを入力してください。\n"
+    if (inputUserName.value.trim() === "") message += "名前を入力してください。\n"
+    if (inputInstruments.value.length === 0) message += "好きな楽器を1つ以上選択してください。\n"
+    if (inputFavoriteMusic.value.length === 0) message += "好きな音楽を1つ以上選択してください。\n"
+    if (inputUniversity.value.trim() === "") message += "大学名を入力してください。\n"
+    if (inputGrade.value === "") message += "学年を選択してください。\n"
+   
+    
+    alert(message)
     return
   }
 

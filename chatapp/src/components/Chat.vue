@@ -343,6 +343,9 @@ function convertToJST(datetimeString) {
             </div>
             <div v-else-if="chat.messageType === 2 || chat.messageType === 3" class="normal-message" :class="{'reverse': chat.userId === userId }">
               <div class="normal-message-user">
+                <div class="normal-img">
+                  <img src="../images/user-solid.svg"></img>
+                </div>
                 <p @click="openUserModal(chat.sendBy, userId)" class="clickable-username">{{ chat.sendBy }}</p>
               </div>
               <div class="normal-message-main"  :class="{ 'blue-border': chat.messageType === 3}">
@@ -485,8 +488,9 @@ function convertToJST(datetimeString) {
   justify-content: center;
   align-items: center;
   /* border-radius: 10px; ← 重複しているので削除してもOK */
-  background-color: #423636;
-  color: white;
+
+  font-size:1em;
+  color: black;
   /* ★変更: flex-direction を column にして、p タグが中央に来るように調整 */
   flex-direction: column; 
 }
@@ -602,6 +606,14 @@ function convertToJST(datetimeString) {
 
 .modal-content .button-normal:hover {
   background-color: #0056b3;
+}
+.normal-img{
+  width:100px;
+  height:100px;
+}
+.normal-img img{
+  width:100%;
+  height:100%;
 }
 
 /* モーダル全体のフェードイン・アウト */
