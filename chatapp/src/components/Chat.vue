@@ -1,8 +1,7 @@
 <script setup>
-import { inject, ref, reactive, onMounted, computed } from "vue"
+import { inject, ref, reactive, onMounted, computed, onUnmounted } from "vue"
 import socketManager from '../socketManager.js'
 import { ChatMessage } from '../objects/message.js'
-
 
 
 // #region global state
@@ -33,9 +32,42 @@ const memoList = reactive([])
 const menuOpen = ref(false)
 let allUsers;
 
+const instrumentMap = {
+  'vocal': 'ボーカル',
+  'electric_guitar': 'エレキギター',
+  'acoustic_guitar': 'アコギ',
+  'bass': 'ベース',
+  'drum': 'ドラム',
+  'keyboard': 'キーボード',
+  'others': 'その他'
+};
+
+const musicMap = {
+  'pop': 'ポップ',
+  'rock': 'ロック',
+  'metal': 'メタル',
+  'punk': 'パンク',
+  'alternative_rock': 'オルタナティブ・ロック',
+  'indie_rock': 'インディー・ロック',
+  'pop_punk': 'ポップパンク',
+  'j-pop': 'J-POP',
+  'anime_song': 'アニソン',
+  'vocaloid': 'ボカロ',
+  'visual': 'ビジュアル系'
+};
+
 // #region lifecycle
 onMounted(() => {
   registerSocketEvent()
+})
+
+onUnmounted(() => {
+  // コンポーネントが破棄される時にイベントリスナーを削除
+  socket.off("enterEvent", handleEnterEvent)
+  socket.off("exitEvent", handleExitEvent)
+  socket.off("publishEvent", handlePublishEvent)
+  socket.off("userListResponse", handleUserListResponse)
+  socket.off("userInfoResponse", handleUserInfoResponse)
 })
 // #endregion
 
@@ -158,37 +190,28 @@ const onReceivePublish = (data) => {
 }
 
 const onReceiveUserDetails = (response) => {
-  // if (response.details) {
     const userDetails = response;
     // 取得した詳細情報をリアクティブ変数に格納
     // JSONフィールドはオブジェクトとして保存されているので、表示用に文字列化するか、適切に処理
-    selectedUserInstrument.value = userDetails?.instrument ? userDetails.instrument.join(', ') : 'N/A';
-    selectedUserMusic.value = userDetails?.music ? userDetails.music.join(', ') : 'N/A';
+    selectedUserInstrument.value = userDetails?.instrument 
+      ? userDetails.instrument.map(inst => instrumentMap[inst] || inst).join(', ') : 'N/A';
+    selectedUserMusic.value = userDetails?.music ? userDetails.music.map(inst => musicMap[inst] || inst).join(', ') : 'N/A';
     selectedUserGrade.value = userDetails?.grade || 'N/A';
     selectedUserUniversity.value = userDetails?.university || 'N/A'; 
-    isModalOpen.value = true; // データが揃ったらモーダルを開く
-  // } else {
-  //   // エラーまたはユーザーが見つからない場合
-  //   selectedUserInstrument.value = '情報なし';
-  //   selectedUserMusic.value = '情報なし';
-  //   selectedUserGrade.value = '情報なし';
-  //   selectedUserUniversity.value = '情報なし';
-  //   isModalOpen.value = true; // エラーメッセージを表示するためにモーダルを開く
-  // }
+    selectedUserLastLogin.value = userDetails?.last_login_at  || 'N/A'; 
+    selectedUserLastLogin.value = convertToJST(selectedUserLastLogin.value)
+    isModalOpen.value = true;
 };
 // #endregion
 
 // #region local methods
 // イベント登録をまとめる
 
-const registerSocketEvent = () => {
-  // 入室イベントを受け取ったら実行
-  socket.on("enterEvent", (data) => {
-    onReceiveEnter(data);
-  })
+const handleEnterEvent = (data) => {
+  onReceiveEnter(data);
+}
 
-  // 退室イベントを受け取ったら実行
-  socket.on("exitEvent", (data) => {
+const handleExitEvent = (data) => {
     // ChatMessage クラスのインスタンスとして退室メッセージを作成します。
     // ChatMessage(messageType, sendBy, sendAt, content) の形式です。
     const exitMessage = new ChatMessage(
@@ -202,10 +225,9 @@ const registerSocketEvent = () => {
       // 作成した退室メッセージを chatList 配列に追加します。
       // chatList は template で v-for ループされており、これに追加すると画面に表示されます。
       addMessageToChatList(exitMessage);
-  })
-// a
-  // 投稿イベントを受け取ったら実行
-  socket.on("publishEvent", (data) => {
+  };
+
+const handlePublishEvent = (data) => {
      const publishmessage = new ChatMessage(
       2,
       data.userName,
@@ -214,15 +236,29 @@ const registerSocketEvent = () => {
       data.userId   // ユーザーIDを追加
   ); 
     addMessageToChatList(publishmessage);
-  })
+  };
 
+const handleUserListResponse = (data) => {
+  allUsers = data;
+};
 
-  socket.on("userListResponse", (data) => {
-    allUsers = data
-  })
-  socket.on("userInfoResponse", (response) => {
+const handleUserInfoResponse = (response) => {
     onReceiveUserDetails(response);
-  });
+  };
+
+const registerSocketEvent = () => {
+  // 入室イベントを受け取ったら実行
+  socket.on("enterEvent", handleEnterEvent)
+
+  // 退室イベントを受け取ったら実行
+  socket.on("exitEvent", handleExitEvent)
+
+  // 投稿イベントを受け取ったら実行
+  socket.on("publishEvent", handlePublishEvent)
+
+  socket.on("userListResponse", handleUserListResponse)
+
+  socket.on("userInfoResponse", handleUserInfoResponse);
 }
 
 const toggleMenu = () => {
@@ -230,7 +266,19 @@ const toggleMenu = () => {
   socket.emit("getUserList",)
 }
 
+// データベースの時間がUTC（協定世界時）だから日本時間にする(9時間ずらせばよい)
+function convertToJST(datetimeString) {
+  const utcDate = new Date(datetimeString.replace(" ", "T"));
+  const jstDate = new Date(utcDate.getTime() + 9 * 60 * 60 * 1000);
 
+  const yyyy = jstDate.getFullYear();
+  const mm = String(jstDate.getMonth() + 1).padStart(2, "0");
+  const dd = String(jstDate.getDate()).padStart(2, "0");
+  const hh = String(jstDate.getHours()).padStart(2, "0");
+  const min = String(jstDate.getMinutes()).padStart(2, "0");
+
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+}
 
 
 // #endregion
@@ -244,14 +292,16 @@ const toggleMenu = () => {
       <p class="main-header-user">ログインユーザ：{{ userName }}さん</p>
     </header>
     <div class="layout">
-       <button class="button-normal button-side" @click="toggleMenu">☰入力中のユーザー</button>
+       <button class="button-normal button-side" @click="toggleMenu">
+        <p v-if="menuOpen">△ユーザー一覧</p>
+        <p v-else>▽ユーザー一覧</p></button>
       <!--ユーザー一覧 ここから-->
       <nav class="side-nav" v-if="menuOpen">
         
         <div class="all-users">
           <div v-for="(user, index) in allUsers.users" :key="index">
             <div class="user-list-user">
-              <p>{{ user.userName }}</p>
+              <p @click="openUserModal(user.userName, user.id)" class="clickable-username">{{ user.userName }}</p>
             </div>
           </div>
         </div>
@@ -261,6 +311,9 @@ const toggleMenu = () => {
         <textarea v-model="chatContent" variant="outlined" placeholder="投稿文を入力してください" rows="4" class="area"></textarea>
         <button class="button-normal button-post" @click="onPublish">投稿</button>
         <button @click="onMemo" class="button-normal button-memo">メモ</button>
+        <router-link to="/" class="link">
+          <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
+        </router-link>
               <div class="mt-5">
             <v-btn
                 @click="sortByNewest"
@@ -308,25 +361,26 @@ const toggleMenu = () => {
           </li>
         </ul>
           </div>
-        <router-link to="/" class="link">
-          <button type="button" class="button-normal button-exit" @click="onExit">退室する</button>
-        </router-link>
-            <div v-if="isModalOpen" class="modal-overlay" @click.self="closeUserModal">
-      <div class="modal-content">
-        <h2>ユーザー情報</h2>
-        <p>ユーザー名: {{ selectedUserName }}</p>
-        <p v-if="selectedUserInstrument && selectedUserInstrument !== 'N/A'">楽器: {{ selectedUserInstrument }}</p>
-        <p v-if="selectedUserMusic && selectedUserMusic !== 'N/A'">好きな音楽: {{ selectedUserMusic }}</p>
-        <p v-if="selectedUserGrade && selectedUserGrade !== 'N/A'">学年: {{ selectedUserGrade }}</p>
-        <p v-if="selectedUserUniversity && selectedUserUniversity !== 'N/A'">大学: {{ selectedUserUniversity }}</p>
-        <button @click="closeUserModal" class="button-normal">閉じる</button>
-      </div>
+        <Transition name="modal-fade">
+          <div v-if="isModalOpen" class="modal-overlay" @click.self="closeUserModal">
+            <div class="modal-content">
+              <h2>ユーザー情報</h2>
+              <p>ユーザー名: {{ selectedUserName }}</p>
+              <!-- ★修正: 日本語ラベルで表示 -->
+              <p v-if="selectedUserInstrument && selectedUserInstrument !== 'N/A'">楽器: {{ selectedUserInstrument }}</p>
+              <p v-if="selectedUserMusic && selectedUserMusic !== 'N/A'">好きな音楽: {{ selectedUserMusic }}</p>
+              <p v-if="selectedUserGrade && selectedUserGrade !== 'N/A'">学年: {{ selectedUserGrade }}年</p>
+              <p v-if="selectedUserUniversity && selectedUserUniversity !== 'N/A'">大学: {{ selectedUserUniversity }}</p>
+              <p v-if="selectedUserLastLogin && selectedUserLastLogin !== 'N/A'">最終ログイン日: {{ selectedUserLastLogin }}</p>
+              <button @click="closeUserModal" class="button-normal">閉じる</button>
+            </div>
+          </div>
+        </Transition>
 
     </div>
       </div>
 
     </div>
-  </div>
 </template>
 
 <style scoped>
@@ -560,6 +614,28 @@ const toggleMenu = () => {
 .normal-img img{
   width:100%;
   height:100%;
+}
+
+/* モーダル全体のフェードイン・アウト */
+.modal-fade-enter-active,
+.modal-fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-fade-enter-from,
+.modal-fade-leave-to {
+  opacity: 0;
+}
+
+/* モーダルコンテンツのスケールアップ・ダウン */
+.modal-fade-enter-active .modal-content,
+.modal-fade-leave-active .modal-content {
+  transition: transform 0.3s ease;
+}
+
+.modal-fade-enter-from .modal-content,
+.modal-fade-leave-to .modal-content {
+  transform: scale(0.9);
 }
 
 </style>

@@ -1,12 +1,11 @@
 <script setup>
-import { inject, ref, onMounted } from "vue"
+import { inject, ref, onMounted, onUnmounted } from "vue"
 import { useRouter } from "vue-router"
 import socketManager from '../socketManager.js'
 
 //const userName = inject("userName")
 
-onMounted(() => {
-  socket.on("registrationResponse", (data) => {
+const handleRegistrationResponse = (data) => {
     if (data.result) {
       alert("登録が完了しました")
       // 前のページに戻る
@@ -14,7 +13,15 @@ onMounted(() => {
     } else {
       alert("登録に失敗しました: " + data.message)
     }
-  })
+  };
+
+onMounted(() => {
+  socket.on("registrationResponse", handleRegistrationResponse)
+})
+
+onUnmounted(() => {
+  // コンポーネントが破棄される時にイベントリスナーを削除
+  socket.off("registrationResponse", handleRegistrationResponse)
 })
 
 const router = useRouter()
