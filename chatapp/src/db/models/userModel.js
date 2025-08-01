@@ -81,7 +81,7 @@ export class UserModel {
   static async getAllUsers() {
     const db = await createConnection();
     try {
-      const rows = await db.all('SELECT id, userName FROM users');
+      const rows = await db.all('SELECT id, userName FROM users ORDER BY last_login_at DESC');
       return rows;
     } catch (error) {
       console.error('Error fetching all users:', error);
