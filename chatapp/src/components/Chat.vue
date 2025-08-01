@@ -274,7 +274,9 @@ function convertToJST(datetimeString) {
       <p class="main-header-user">ログインユーザ：{{ userName }}さん</p>
     </header>
     <div class="layout">
-       <button class="button-normal button-side" @click="toggleMenu">☰ユーザー一覧</button>
+       <button class="button-normal button-side" @click="toggleMenu">
+        <p v-if="menuOpen">△ユーザー一覧</p>
+        <p v-else>▽ユーザー一覧</p></button>
       <!--ユーザー一覧 ここから-->
       <nav class="side-nav" v-if="menuOpen">
         
