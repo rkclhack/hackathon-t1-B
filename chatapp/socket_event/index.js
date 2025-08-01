@@ -1,88 +1,55 @@
-export default (io, socket) => {
-  // 入室メッセージをクライアントに送信する
-  socket.on("enterEvent", (data) => {
-    io.sockets.emit("enterEvent", data)
-  })
+import { handleEnterEvent, handleExitEvent, handlePublishEvent } from './handlers/chatHandlers.js'
+import { handleLogin, handleRegisterUser } from './handlers/authHandlers.js'
+import { handleGetUserInfo, handleGetUserList, handleInitDB } from './handlers/userHandlers.js'
+import { logEvent, logError } from './utils.js'
 
-  // 退室メッセージをクライアントに送信する
-  socket.on("exitEvent", (data) => {
-    socket.broadcast.emit("exitEvent", data)
-  })
+// UserModelを一度だけインポート
+let UserModel = null
 
-  // 投稿メッセージを送信する
-  socket.on("publishEvent", (data) => {
-    io.sockets.emit("publishEvent", data)
-  })
+const initializeUserModel = async () => {
+  if (!UserModel) {
+    const module = await import("../src/db/models/userModel.js")
+    UserModel = module.UserModel
+  }
+  return UserModel
+}
 
-  // DBの初期化
-  socket.on("initDB", async (data) =>  {
-    try {
-      console.log('Initializing database...');
-      const { UserModel } = await import("../src/db/models/userModel.js");
-      await UserModel.createTable();
-    } catch (error) {
-      console.error('Database initialization failed:', error);
-    }
+export default async (io, socket) => {
+  logEvent('connection', socket.id, { 
+    address: socket.handshake.address,
+    time: new Date().toISOString() 
   })
-
-  // ユーザー情報を取得する
-  socket.on("getUserInfo", async (data) => {
-    try {
-      const { UserModel } = await import("../src/db/models/userModel.js");
-      const userInfo = await UserModel.getUserInfoByID(data.userId);
-      socket.emit("userInfoResponse", userInfo);
-    } catch (error) {
-      console.error('Error fetching user info:', error);
-      socket.emit("userInfoResponse", { userId: data.userId, error: 'Failed to fetch user info' });
-    }
+  
+  // UserModelを初期化
+  try {
+    await initializeUserModel()
+  } catch (error) {
+    logError('UserModel initialization', error, socket.id)
+    socket.disconnect(true)
+    return
+  }
+  
+  // チャット関連のイベント
+  socket.on("enterEvent", handleEnterEvent(io, socket))
+  socket.on("exitEvent", handleExitEvent(io, socket))
+  socket.on("publishEvent", handlePublishEvent(io, socket))
+  
+  // 認証関連のイベント
+  socket.on("login", handleLogin(socket, UserModel))
+  socket.on("registerUser", handleRegisterUser(socket, UserModel))
+  
+  // ユーザー情報関連のイベント
+  socket.on("getUserInfo", handleGetUserInfo(socket, UserModel))
+  socket.on("getUserList", handleGetUserList(socket, UserModel))
+  socket.on("initDB", handleInitDB(socket, UserModel))
+  
+  // 切断イベント
+  socket.on("disconnect", (reason) => {
+    logEvent('disconnect', socket.id, { reason })
   })
-
-  // ユーザー認証を行う
-  socket.on("login", async (data) => {
-    try {
-      const { UserModel } = await import("../src/db/models/userModel.js");
-      const user = await UserModel.authenticateUser(data.email, data.password);
-      if (!user) {
-        socket.emit("loginResponse", { result: false, error: 'Invalid email or password' });
-        return;
-      }
-      await UserModel.updateLastLogin(user.id);
-      socket.emit("loginResponse", { result: true, userName: user.userName, userId: user.id });
-    } catch (error) {
-      console.error('Error authenticating user:', error);
-      socket.emit("loginResponse", { result: false, error: 'Failed to authenticate user' });
-    }
-  })
-
-  // ユーザー登録を行う
-  socket.on("registerUser", async (data) => {
-    try {
-      const { UserModel } = await import("../src/db/models/userModel.js");
-      const userId = await UserModel.createUser(
-        data.email,
-        data.password,
-        data.userName,
-        data.instrument,
-        data.music,
-        data.grade,
-        data.university
-      );
-      socket.emit("registrationResponse", { result: true });
-    } catch (error) {
-      console.error('Error registering user:', error);
-      socket.emit("registrationResponse", { result: false, error: 'Failed to register user' });
-    }
-  })
-
-  // ユーザー一覧を取得する
-  socket.on("getUserList", async () => {
-    try {
-      const { UserModel } = await import("../src/db/models/userModel.js");
-      const users = await UserModel.getAllUsers();
-      socket.emit("userListResponse", { users });
-    } catch (error) {
-      console.error('Error fetching user list:', error);
-      socket.emit("userListResponse", { error: 'Failed to fetch user list' });
-    }
+  
+  // エラーハンドリング
+  socket.on("error", (error) => {
+    logError('socket error', error, socket.id)
   })
 }
