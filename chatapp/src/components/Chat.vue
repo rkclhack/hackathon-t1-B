@@ -1,8 +1,7 @@
 <script setup>
-import { inject, ref, reactive, onMounted, computed } from "vue"
+import { inject, ref, reactive, onMounted, computed, onUnmounted } from "vue"
 import socketManager from '../socketManager.js'
 import { ChatMessage } from '../objects/message.js'
-
 
 
 // #region global state
@@ -60,6 +59,15 @@ const musicMap = {
 // #region lifecycle
 onMounted(() => {
   registerSocketEvent()
+})
+
+onUnmounted(() => {
+  // コンポーネントが破棄される時にイベントリスナーを削除
+  socket.off("enterEvent", handleEnterEvent)
+  socket.off("exitEvent", handleExitEvent)
+  socket.off("publishEvent", handlePublishEvent)
+  socket.off("userListResponse", handleUserListResponse)
+  socket.off("userInfoResponse", handleUserInfoResponse)
 })
 // #endregion
 
@@ -199,14 +207,11 @@ const onReceiveUserDetails = (response) => {
 // #region local methods
 // イベント登録をまとめる
 
-const registerSocketEvent = () => {
-  // 入室イベントを受け取ったら実行
-  socket.on("enterEvent", (data) => {
-    onReceiveEnter(data);
-  })
+const handleEnterEvent = (data) => {
+  onReceiveEnter(data);
+}
 
-  // 退室イベントを受け取ったら実行
-  socket.on("exitEvent", (data) => {
+const handleExitEvent = (data) => {
     // ChatMessage クラスのインスタンスとして退室メッセージを作成します。
     // ChatMessage(messageType, sendBy, sendAt, content) の形式です。
     const exitMessage = new ChatMessage(
@@ -220,10 +225,9 @@ const registerSocketEvent = () => {
       // 作成した退室メッセージを chatList 配列に追加します。
       // chatList は template で v-for ループされており、これに追加すると画面に表示されます。
       addMessageToChatList(exitMessage);
-  })
-// a
-  // 投稿イベントを受け取ったら実行
-  socket.on("publishEvent", (data) => {
+  };
+
+const handlePublishEvent = (data) => {
      const publishmessage = new ChatMessage(
       2,
       data.userName,
@@ -232,15 +236,29 @@ const registerSocketEvent = () => {
       data.userId   // ユーザーIDを追加
   ); 
     addMessageToChatList(publishmessage);
-  })
+  };
 
+const handleUserListResponse = (data) => {
+  allUsers = data;
+};
 
-  socket.on("userListResponse", (data) => {
-    allUsers = data
-  })
-  socket.on("userInfoResponse", (response) => {
+const handleUserInfoResponse = (response) => {
     onReceiveUserDetails(response);
-  });
+  };
+
+const registerSocketEvent = () => {
+  // 入室イベントを受け取ったら実行
+  socket.on("enterEvent", handleEnterEvent)
+
+  // 退室イベントを受け取ったら実行
+  socket.on("exitEvent", handleExitEvent)
+
+  // 投稿イベントを受け取ったら実行
+  socket.on("publishEvent", handlePublishEvent)
+
+  socket.on("userListResponse", handleUserListResponse)
+
+  socket.on("userInfoResponse", handleUserInfoResponse);
 }
 
 const toggleMenu = () => {
