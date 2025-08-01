@@ -346,7 +346,7 @@ function convertToJST(datetimeString) {
                 <div class="normal-img">
                   <img src="../images/user-solid.svg"></img>
                 </div>
-                <p @click="openUserModal(chat.sendBy, userId)" class="clickable-username">{{ chat.sendBy }}</p>
+                <p @click="openUserModal(chat.sendBy, chat.userId)" class="clickable-username">{{ chat.sendBy }}</p>
               </div>
               <div class="normal-message-main"  :class="{ 'blue-border': chat.messageType === 3}">
                 <div class="normal-message-main-content">
